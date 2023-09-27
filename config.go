@@ -1,7 +1,6 @@
 package gobase
 
 import (
-	"fmt"
 	"github.com/spf13/viper"
 	"log"
 	"os"
@@ -11,12 +10,6 @@ var ConfigObj *Config
 
 type Config struct {
 	viper *viper.Viper
-	SC    ServerConfig
-}
-
-type ServerConfig struct {
-	Name string
-	Addr string
 }
 
 //type GrpcConfig struct {
@@ -51,18 +44,5 @@ func InitConfig(params ...string) *Config {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	ConfigObj.ReadServerConfig()
 	return ConfigObj
-}
-
-func (c *Config) ReadServerConfig() {
-	sc := c.viper.Sub("server")
-	if sc == nil {
-		fmt.Printf("server config is nil")
-		os.Exit(1)
-	}
-	c.SC = ServerConfig{
-		Name: sc.GetString("name"),
-		Addr: sc.GetString("addr"),
-	}
 }

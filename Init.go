@@ -16,6 +16,7 @@ import (
 	"github.com/preceeder/gobase/jigou"
 	"github.com/preceeder/gobase/logs"
 	"github.com/preceeder/gobase/rongyun"
+	"github.com/preceeder/gobase/router"
 	"github.com/preceeder/gobase/shumei"
 	"github.com/spf13/viper"
 )
@@ -27,6 +28,15 @@ type initOptional struct {
 	withJigou  bool
 	withRpc    bool
 	withShumei bool
+}
+
+func WithGinOptional(c bool) func(*initOptional, viper.Viper) {
+	return func(il *initOptional, config viper.Viper) {
+		il.withRedis = c
+		if c == true {
+			router.InitGinWithViperConfig(config)
+		}
+	}
 }
 
 func WithRedisOptional(c bool) func(*initOptional, viper.Viper) {
@@ -93,7 +103,7 @@ func WithShumeiOptional(c bool) func(*initOptional, viper.Viper) {
 	}
 }
 
-func Init(viperPath string, viperConfigName string, optional ...func(*initOptional, viper.Viper)) ServerConfig {
+func Init(viperPath string, viperConfigName string, optional ...func(*initOptional, viper.Viper)) {
 	cf := InitConfig(viperPath, viperConfigName)
 	//初始化环境变量
 	env.InitEnv(*cf.viper)
@@ -105,5 +115,5 @@ func Init(viperPath string, viperConfigName string, optional ...func(*initOption
 		v(&il, *cf.viper)
 	}
 
-	return cf.SC
+	return
 }
