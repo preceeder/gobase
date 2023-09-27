@@ -9,6 +9,7 @@ package gobase
 
 import (
 	"github.com/preceeder/gobase/aliyun/push"
+	"github.com/preceeder/gobase/config"
 	"github.com/preceeder/gobase/db/mysqlDb"
 	"github.com/preceeder/gobase/db/redisDb"
 	"github.com/preceeder/gobase/env"
@@ -104,7 +105,7 @@ func WithShumeiOptional(c bool) func(*initOptional, viper.Viper) {
 }
 
 func Init(viperPath string, viperConfigName string, optional ...func(*initOptional, viper.Viper)) {
-	cf := InitConfig(viperPath, viperConfigName)
+	cf := config.InitConfig(viperPath, viperConfigName)
 	//初始化环境变量
 	env.InitEnv(*cf.viper)
 
