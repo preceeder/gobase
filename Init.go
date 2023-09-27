@@ -107,13 +107,13 @@ func WithShumeiOptional(c bool) func(*initOptional, viper.Viper) {
 func Init(viperPath string, viperConfigName string, optional ...func(*initOptional, viper.Viper)) {
 	cf := config.InitConfig(viperPath, viperConfigName)
 	//初始化环境变量
-	env.InitEnv(*cf.viper)
+	env.InitEnv(*cf.Viper)
 
-	logs.InitLogWithViper(*cf.viper)
+	logs.InitLogWithViper(*cf.Viper)
 
 	il := initOptional{}
 	for _, v := range optional {
-		v(&il, *cf.viper)
+		v(&il, *cf.Viper)
 	}
 
 	return
