@@ -96,9 +96,6 @@ func Register(controller interface{}) bool {
 		apiData = apiConfig(arc.Interface())
 	}
 	var pathMap map[string][]PW
-	if strings.ToLower(module) == "room" {
-		fmt.Println("ss")
-	}
 	pathMap = PdHandler(apiData, strings.ToLower(module))
 	// 将路由 扁平化 为 map[string]map[string]any
 	//遍历方法
