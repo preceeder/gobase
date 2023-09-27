@@ -16,8 +16,9 @@ import (
 )
 
 type Environment struct {
-	Env    string `json:"env"` // product, test, local
-	PreFix string `json:"prefix"`
+	Env      string `json:"env"` // product, test, local
+	PreFix   string `json:"prefix"`
+	GIN_MODE string `json:"GIN_MODE"`
 }
 
 func InitEnv(config viper.Viper) {
