@@ -13,11 +13,11 @@ import (
 	"github.com/preceeder/gobase/db/mysqlDb"
 	"github.com/preceeder/gobase/db/redisDb"
 	"github.com/preceeder/gobase/env"
+	"github.com/preceeder/gobase/ginserver"
 	"github.com/preceeder/gobase/grpcm"
 	"github.com/preceeder/gobase/jigou"
 	"github.com/preceeder/gobase/logs"
 	"github.com/preceeder/gobase/rongyun"
-	"github.com/preceeder/gobase/router"
 	"github.com/preceeder/gobase/shumei"
 	"github.com/spf13/viper"
 )
@@ -35,7 +35,7 @@ func WithGinOptional(c bool) func(*initOptional, viper.Viper) {
 	return func(il *initOptional, config viper.Viper) {
 		il.withRedis = c
 		if c == true {
-			router.InitGinWithViperConfig(config)
+			ginserver.InitGinWithViperConfig(config)
 		}
 	}
 }

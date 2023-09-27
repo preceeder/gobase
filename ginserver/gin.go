@@ -5,7 +5,7 @@ Author:      Chenghu
 Date:       2023/9/27 16:35
 Change Activity:
 */
-package router
+package ginserver
 
 import (
 	"fmt"
