@@ -158,3 +158,10 @@ type VoiceFileDetail struct {
 	RequestParams map[string]any   `json:"requestParams"`
 	RiskLevel     string           `json:"riskLevel"`
 }
+
+// 流关闭回调
+type CloseStreamResponse struct {
+	Code      int    `json:"code"`
+	Message   string `json:"message"`
+	RequestID string `json:"requestId"`
+}

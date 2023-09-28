@@ -27,11 +27,23 @@ var imageLangSet = mapset.NewSet("zh", "en", "ar")
 var textLangSet = mapset.NewSet("zh", "en", "ar", "hi", "es", "fr", "ru", "pt", "id", "de", "ja", "tr", "vi", "it", "th", "tl", "ko", "ms", "auto")
 var voiceLangSet = mapset.NewSet("zh", "en", "ar", "hi", "es", "fr", "ru", "pt", "id", "de", "ja", "tr", "vi", "it", "th", "tl", "ko", "ms")
 
+type ShumeiUrl struct {
+	VideoStreamCloseUrl string `json:"videoStreamCloseUrl"` // 视频流检查关闭的数美url
+	VoiceStreamCloseUrl string `json:"voiceStreamCLoseUrl"` // 语音流检查关闭的数美url
+	ImageUrl            string `json:"imageUrl"`            // 同步图片的检查的数美url
+	TextUrl             string `json:"textUrl"`             // 文本检查的数美url
+	VoiceUrl            string `json:"voiceUrl"`            // 语音文件检查的数美url
+	AsyncVoiceUrl       string `json:"asyncVoiceUrl"`       // 异步语音文件检查的数美url
+	AsyncVideoUrl       string `json:"asyncVideoUrl"`       // 视频文件检查的数美url
+	VoiceStreamUrl      string `json:"voiceStreamUrl"`      // 音频流检查url
+	VideoStreamUrl      string `json:"videoStreamUrl"`      // 视频流检查url
+}
 type ShumeiConfig struct {
-	AppId       string `json:"appid"`
-	accessKey   string `json:"accessKey"`
-	CdnUrl      string `json:"cdnUrl"`      // cdn的url
-	TokenPrefix string `json:"tokenPrefix"` // 用户token的前缀
+	AppId       string    `json:"appid"`
+	accessKey   string    `json:"accessKey"`
+	CdnUrl      string    `json:"cdnUrl"`      // cdn的url
+	TokenPrefix string    `json:"tokenPrefix"` // 用户token的前缀
+	ShumeiUrl   ShumeiUrl `json:"shumeiUrl"`
 }
 
 func initShumei(config ShumeiConfig) {
@@ -74,7 +86,8 @@ type ShuMei struct {
 	TokenPrefix      string // 用户id的统一前缀
 	HttpClient       *resty.Client
 	BaseUrl          string
-	StreamType       string // 目前默认值 ZEGO
+	StreamType       string    // 目前默认值 ZEGO
+	ShumeiUrl        ShumeiUrl // 数美接口的urls
 }
 
 func NewShuMei(appId string, accessKey string, optionals ...func(*ShuMei) error) (*ShuMei, error) {
@@ -120,6 +133,13 @@ func OptionWithTokenPrefix(t string) func(*ShuMei) error {
 func OptionWithBaseUrl(t string) func(mei *ShuMei) error {
 	return func(s *ShuMei) error {
 		s.BaseUrl = t
+		return nil
+	}
+}
+
+func OptionWithUrl(t ShumeiUrl) func(mei *ShuMei) error {
+	return func(s *ShuMei) error {
+		s.ShumeiUrl = t
 		return nil
 	}
 }
@@ -198,8 +218,7 @@ func (s ShuMei) textLangHandler(lang string) string {
 
 // 同步 图片检查
 func (s ShuMei) AsyncImage(p ShumeiAsyncImage) bool {
-	//turl := "http://api-img-xjp.fengkongcloud.com/image/v4"
-	turl := "http://api-img-sh.fengkongcloud.com/image/v4"
+	turl := s.ShumeiUrl.ImageUrl //  "http://api-img-sh.fengkongcloud.com/image/v4"
 
 	data := map[string]interface{}{
 		"img":            s.urlHandler(p.ImageUrl),
@@ -245,7 +264,7 @@ func (s ShuMei) AsyncImage(p ShumeiAsyncImage) bool {
 
 func (s ShuMei) Image(p ShumeiImage) bool {
 	//turl := "http://api-img-xjp.fengkongcloud.com/image/v4"
-	turl := "http://api-img-sh.fengkongcloud.com/image/v4"
+	turl := s.ShumeiUrl.ImageUrl //"http://api-img-sh.fengkongcloud.com/image/v4"
 
 	data := map[string]interface{}{
 		"img":            s.urlHandler(p.ImageUrl),
@@ -286,7 +305,7 @@ func (s ShuMei) Image(p ShumeiImage) bool {
 }
 
 func (s ShuMei) Text(p ShumeiText) bool {
-	turl := "http://api-text-sh.fengkongcloud.com/text/v4"
+	turl := s.ShumeiUrl.TextUrl //"http://api-text-sh.fengkongcloud.com/text/v4"
 	data := map[string]interface{}{
 		"text":    p.Text,
 		"tokenId": s.tokenHandler(p.UserId),
@@ -327,7 +346,7 @@ func (s ShuMei) Text(p ShumeiText) bool {
 
 // 只支持 url的 同步
 func (s ShuMei) VoiceFile(p ShumeiVoiceFile) bool {
-	turl := "http://api-audio-sh.fengkongcloud.com/audiomessage/v4"
+	turl := s.ShumeiUrl.VoiceUrl // "http://api-audio-sh.fengkongcloud.com/audiomessage/v4"
 	data := map[string]interface{}{
 		"tokenId": s.tokenHandler(p.UserId),
 	}
@@ -364,8 +383,7 @@ func (s ShuMei) VoiceFile(p ShumeiVoiceFile) bool {
 }
 
 func (s ShuMei) AsyncVoiceFile(p ShumeiVoiceFile) bool {
-	//上海
-	turl := "http://api-audio-sh.fengkongcloud.com/audio/v4"
+	turl := s.ShumeiUrl.AsyncVoiceUrl //"http://api-audio-sh.fengkongcloud.com/audio/v4"
 	data := map[string]interface{}{
 		"tokenId": s.tokenHandler(p.UserId),
 		"lang":    s.voiceLangeHandler(p.Lang),
@@ -404,7 +422,7 @@ func (s ShuMei) AsyncVoiceFile(p ShumeiVoiceFile) bool {
 
 func (s ShuMei) AsyncVideoFile(p ShumeiAsyncVideoFile) bool {
 	//上海节点
-	turl := "http://api-video-sh.fengkongcloud.com/video/v4"
+	turl := s.ShumeiUrl.AsyncVideoUrl // "http://api-video-sh.fengkongcloud.com/video/v4"
 	data := map[string]interface{}{
 		"tokenId": s.tokenHandler(p.UserId),
 		"lang":    s.imageLangHandler(p.Lang),
@@ -448,7 +466,7 @@ func (s ShuMei) AsyncVideoFile(p ShumeiAsyncVideoFile) bool {
 
 // 音频流检查
 func (s ShuMei) AudioStream(p ShumeiAsyncAudioStream) (bool, *AudioStreamResponse) {
-	turl := "http://api-audiostream-sh.fengkongcloud.com/audiostream/v4"
+	turl := s.ShumeiUrl.VoiceStreamUrl //"http://api-audiostream-sh.fengkongcloud.com/audiostream/v4"
 	data := map[string]interface{}{
 		"tokenId":    s.tokenHandler(p.UserId),
 		"lang":       s.voiceLangeHandler(p.Lang),
@@ -503,7 +521,7 @@ func (s ShuMei) AudioStream(p ShumeiAsyncAudioStream) (bool, *AudioStreamRespons
 
 // 视频流检查
 func (s ShuMei) VideoStream(p ShumeiAsyncVideoStream) (bool, *AudioStreamResponse) {
-	turl := "http://api-videostream-sh.fengkongcloud.com/videostream/v4"
+	turl := s.ShumeiUrl.VideoStreamUrl //"http://api-videostream-sh.fengkongcloud.com/videostream/v4"
 	data := map[string]interface{}{
 		"tokenId":    s.tokenHandler(p.UserId),
 		"lang":       s.imageLangHandler(p.Lang),
@@ -559,4 +577,31 @@ func (s ShuMei) VideoStream(p ShumeiAsyncVideoStream) (bool, *AudioStreamRespons
 	}
 
 	return true, res
+}
+
+/** 流关闭接口
+ * @param requestId string 请求id
+ * @ltype string 类型 voice｜video
+ */
+func (s ShuMei) CloseStreamCheck(requestId string, ltype string) (bool, *CloseStreamResponse) {
+	turl := ""
+	if ltype == "video" {
+		turl = s.ShumeiUrl.VideoStreamCloseUrl
+	} else if ltype == "voice" {
+		turl = s.ShumeiUrl.VoiceStreamCloseUrl
+	}
+
+	payload := map[string]interface{}{
+		"accessKey": s.AccessKey,
+		"requestId": requestId,
+	}
+
+	res := &CloseStreamResponse{}
+	_, err := s.Send(turl, payload, res)
+	if err != nil {
+		slog.Error("shumei close stream faild", "error", err.Error())
+		return false, nil
+	}
+	return true, res
+
 }
