@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/mitchellh/mapstructure"
-	"github.com/preceeder/gobase"
+	"github.com/preceeder/gobase/ginserver"
 	"github.com/preceeder/gobase/utils"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -63,7 +63,7 @@ var Routes = []Route{}
 func InitRouter() *gin.Engine {
 	//初始化路由
 	r := gin.New()
-	r.Use(gobase.Cors(), gobase.GinLogger(), gobase.GinRecovery(true))
+	r.Use(ginserver.Cors(), ginserver.GinLogger(), ginserver.GinRecovery(true))
 	//docs.SwaggerInfo.BasePath = "/api"
 	//打开 host:port/swagger/index.html
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))

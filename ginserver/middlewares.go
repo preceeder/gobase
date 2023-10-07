@@ -1,7 +1,9 @@
-package gobase
+package ginserver
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/preceeder/gobase"
+	"github.com/preceeder/gobase/utils/datetimeh"
 	"log/slog"
 	"net"
 	"net/http"
@@ -41,12 +43,15 @@ func GinLogger() gin.HandlerFunc {
 		start := time.Now()
 		path := c.Request.URL.Path
 		query := c.Request.URL.RawQuery
+		requestId := datetimeh.Now().TimestampMilli()
+		c.Set("requestId", requestId)
 		c.Next()
 
 		cost := time.Since(start)
 		slog.Info("",
 			"method", c.Request.Method,
 			"path", path,
+			"requestId", requestId,
 			"status", c.Writer.Status(),
 			"query", query,
 			"ip", c.ClientIP(),
@@ -59,7 +64,7 @@ func GinLogger() gin.HandlerFunc {
 // GinRecovery recover掉项目可能出现的panic，并使用zap记录相关日志
 func GinRecovery(stack bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer CatchException(func(err any, trace string) {
+		defer gobase.CatchException(func(err any, trace string) {
 			// Check for a broken connection, as it is not really a
 			// condition that warrants a panic stack trace.
 			var brokenPipe bool
