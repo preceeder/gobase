@@ -10,6 +10,7 @@ package shumei
 import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
+	"github.com/preceeder/gobase/utils"
 	"testing"
 )
 
@@ -51,7 +52,7 @@ func TestShuMei_AsyncImage1(t *testing.T) {
 				BaseUrl:          tt.fields.BaseUrl,
 				StreamType:       tt.fields.StreamType,
 			}
-			if got := s.AsyncImage(tt.args.p); got != tt.want {
+			if got := s.AsyncImage(utils.Context{}, tt.args.p); got != tt.want {
 				t.Errorf("AsyncImage() = %v, want %v", got, tt.want)
 			}
 		})
@@ -96,7 +97,7 @@ func TestShuMei_AsyncVideoFile(t *testing.T) {
 				BaseUrl:          tt.fields.BaseUrl,
 				StreamType:       tt.fields.StreamType,
 			}
-			if got := s.AsyncVideoFile(tt.args.p); got != tt.want {
+			if got := s.AsyncVideoFile(utils.Context{}, tt.args.p); got != tt.want {
 				t.Errorf("AsyncVideoFile() = %v, want %v", got, tt.want)
 			}
 		})
@@ -141,7 +142,7 @@ func TestShuMei_AsyncVoiceFile(t *testing.T) {
 				BaseUrl:          tt.fields.BaseUrl,
 				StreamType:       tt.fields.StreamType,
 			}
-			if got := s.AsyncVoiceFile(tt.args.p); got != tt.want {
+			if got := s.AsyncVoiceFile(utils.Context{}, tt.args.p); got != tt.want {
 				t.Errorf("AsyncVoiceFile() = %v, want %v", got, tt.want)
 			}
 		})
@@ -186,7 +187,7 @@ func TestShuMei_AudioStream(t *testing.T) {
 				BaseUrl:          tt.fields.BaseUrl,
 				StreamType:       tt.fields.StreamType,
 			}
-			if got, _ := s.AudioStream(tt.args.p); got != tt.want {
+			if got, _ := s.AudioStream(utils.Context{}, tt.args.p); got != tt.want {
 				t.Errorf("AudioStream() = %v, want %v", got, tt.want)
 			}
 		})
@@ -210,7 +211,7 @@ func TestShuMei_Image(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := s.Image(tt.args.p); got != tt.want {
+			if got := s.Image(utils.Context{}, tt.args.p); got != tt.want {
 				t.Errorf("Image() = %v, want %v", got, tt.want)
 			}
 		})
@@ -234,9 +235,9 @@ func TestShuMei_Text1(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := s.Text(tt.args.p)
+			got := s.Text(utils.Context{}, tt.args.p)
 			fmt.Println(got)
-			if got := s.Text(tt.args.p); got != tt.want {
+			if got := s.Text(utils.Context{}, tt.args.p); got != tt.want {
 				t.Errorf("Text() = %v, want %v", got, tt.want)
 			}
 		})
@@ -281,7 +282,7 @@ func TestShuMei_VideoStream(t *testing.T) {
 				BaseUrl:          tt.fields.BaseUrl,
 				StreamType:       tt.fields.StreamType,
 			}
-			if got, _ := s.VideoStream(tt.args.p); got != tt.want {
+			if got, _ := s.VideoStream(utils.Context{}, tt.args.p); got != tt.want {
 				t.Errorf("VideoStream() = %v, want %v", got, tt.want)
 			}
 		})
@@ -326,7 +327,7 @@ func TestShuMei_VoiceFile(t *testing.T) {
 				BaseUrl:          tt.fields.BaseUrl,
 				StreamType:       tt.fields.StreamType,
 			}
-			if got := s.VoiceFile(tt.args.p); got != tt.want {
+			if got := s.VoiceFile(utils.Context{}, tt.args.p); got != tt.want {
 				t.Errorf("VoiceFile() = %v, want %v", got, tt.want)
 			}
 		})

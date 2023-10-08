@@ -14,6 +14,7 @@ import (
 	"github.com/bytedance/sonic"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+	"github.com/preceeder/gobase/utils"
 	"github.com/spf13/viper"
 	"log/slog"
 	"os"
@@ -115,49 +116,52 @@ func (s Sdb) getDb(params map[string]any) (db string) {
 	return
 }
 
-func (s Sdb) getTableName(params map[string]any) (tableName string) {
+func (s Sdb) getTableName(ctx utils.Context, params map[string]any) (tableName string) {
 	if tn, ok := params["tableName"]; ok {
 		tableName = tn.(string)
 		delete(params, "tableName")
 	} else {
+		slog.Error("mysqlDb tableName not exist", "requestId", ctx.RequestId)
 		panic("mysqlDb tableName not exist")
 	}
 	return
 }
 
 // 参数解析
-func (s Sdb) sqlPares(osql string, params map[string]any) (sql string, args []any, db string) {
+func (s Sdb) sqlPares(ctx utils.Context, osql string, params map[string]any) (sql string, args []any, db string) {
 	db = s.getDb(params)
 	sql, args, err := sqlx.Named(osql, params)
 	if err != nil {
+		slog.Error("sqlx.Named error :"+err.Error(), "requestId", ctx.RequestId)
 		panic("sqlx.Named error :" + err.Error())
 	}
 	sql, args, err = sqlx.In(sql, args...)
 	if err != nil {
+		slog.Error("sqlx.In error :"+err.Error(), "requestId", ctx.RequestId)
 		panic("sqlx.In error :" + err.Error())
 	}
 	sql = s.Db[db].Rebind(sql)
 	return sql, args, db
 }
 
-func (s Sdb) Select(sqlStr string, params map[string]any, row any) bool {
-	q, args, db := s.sqlPares(sqlStr, params)
+func (s Sdb) Select(ctx utils.Context, sqlStr string, params map[string]any, row any) bool {
+	q, args, db := s.sqlPares(ctx, sqlStr, params)
 	err := s.Db[db].Get(row, q, args...)
 	switch {
 	case errors.Is(err, sql.ErrNoRows):
 		return false
 	case err != nil:
-		slog.Error("mysqlDb Query failed", "error", err, "sql", sqlStr, "data", params)
+		slog.Error("mysqlDb Query failed", "error", err, "sql", sqlStr, "data", params, "requestId", ctx.RequestId)
 		return false
 	}
 	return true
 }
 
-func (s Sdb) Fetch(sqlStr string, params map[string]any, row any) bool {
-	q, args, db := s.sqlPares(sqlStr, params)
+func (s Sdb) Fetch(ctx utils.Context, sqlStr string, params map[string]any, row any) bool {
+	q, args, db := s.sqlPares(ctx, sqlStr, params)
 	rs, err := s.Db[db].Queryx(q, args...)
 	if err != nil {
-		slog.Error("mysqlDb Fetch failed", "error", err, "sql", sqlStr, "data", params)
+		slog.Error("mysqlDb Fetch failed", "error", err, "sql", sqlStr, "data", params, "requestId", ctx.RequestId)
 		return false
 	}
 	defer rs.Close()
@@ -167,14 +171,14 @@ func (s Sdb) Fetch(sqlStr string, params map[string]any, row any) bool {
 	case errors.Is(err, sql.ErrNoRows):
 		return false
 	case err != nil:
-		slog.Error("mysqlDb Fetch StructScan failed", "error", err, "sql", sqlStr, "data", params)
+		slog.Error("mysqlDb Fetch StructScan failed", "error", err, "sql", sqlStr, "data", params, "requestId", ctx.RequestId)
 		return false
 	}
 	return true
 }
 
 // sqlStr="select * from t_user where userId=?" agrs: []any{"2222222"}
-func (s Sdb) FetchByArgs(sqlStr string, args []any, db string, row any) bool {
+func (s Sdb) FetchByArgs(ctx utils.Context, sqlStr string, args []any, db string, row any) bool {
 	if db == "" {
 		db = s.DefaultDb
 	}
@@ -184,7 +188,7 @@ func (s Sdb) FetchByArgs(sqlStr string, args []any, db string, row any) bool {
 	case errors.Is(err, sql.ErrNoRows):
 		return false
 	case err != nil:
-		slog.Error("mysqlDb Fetch StructScan failed", "error", err, "sql", sqlStr, "data", args)
+		slog.Error("mysqlDb Fetch StructScan failed", "error", err, "sql", sqlStr, "data", args, "requestId", ctx.RequestId)
 		return false
 	}
 	return true
@@ -192,8 +196,8 @@ func (s Sdb) FetchByArgs(sqlStr string, args []any, db string, row any) bool {
 
 // map[string]any{"DB": "default", "tableName": "t_user",  "Set":map[string]any{"nick": "nihao"}, "Where":map[string]any{"userId": "1111"}}
 
-func (s Sdb) Update(params map[string]any, tx ...*sqlx.Tx) int64 {
-	tableName := s.getTableName(params)
+func (s Sdb) Update(ctx utils.Context, params map[string]any, tx ...*sqlx.Tx) int64 {
+	tableName := s.getTableName(ctx, params)
 
 	var sqlStr string = "update " + tableName
 	var tempParams = make(map[string]any, 0)
@@ -225,7 +229,7 @@ func (s Sdb) Update(params map[string]any, tx ...*sqlx.Tx) int64 {
 		wvL = append(wvL, tpv)
 	}
 	sqlStr = sqlStr + " set " + strings.Join(setL, ", ") + " where " + strings.Join(wvL, " and ")
-	q, args, db := s.sqlPares(sqlStr, tempParams)
+	q, args, db := s.sqlPares(ctx, sqlStr, tempParams)
 	var rs sql.Result
 	var err error
 	if len(tx) > 0 && tx[0] != nil {
@@ -236,7 +240,7 @@ func (s Sdb) Update(params map[string]any, tx ...*sqlx.Tx) int64 {
 
 	if err != nil {
 		paS, _ := sonic.MarshalString(args)
-		slog.Error("mysqlDb update failed", "error", err, "sql", q, "data", paS)
+		slog.Error("mysqlDb update failed", "error", err, "sql", q, "data", paS, "requestId", ctx.RequestId)
 		return -1
 	}
 	aft, _ := rs.RowsAffected()
@@ -245,9 +249,9 @@ func (s Sdb) Update(params map[string]any, tx ...*sqlx.Tx) int64 {
 
 //map[string]any{"DB": "", "tableName":"t_user", "name": "nick", "id": 1}
 
-func (s Sdb) Insert(params map[string]any, tx ...*sqlx.Tx) sql.Result {
+func (s Sdb) Insert(ctx utils.Context, params map[string]any, tx ...*sqlx.Tx) sql.Result {
 	db := s.getDb(params)
-	tableName := s.getTableName(params)
+	tableName := s.getTableName(ctx, params)
 	var sqlStr string = "insert into " + tableName
 	var attrs = []string{}
 	var attrValues = []string{}
@@ -268,7 +272,7 @@ func (s Sdb) Insert(params map[string]any, tx ...*sqlx.Tx) sql.Result {
 		rs, err = s.Db[db].NamedExec(sqlStr, params)
 	}
 	if err != nil {
-		slog.Error("mysqlDb insert failed", "error", err.Error(), "sql", sqlStr, "data", params)
+		slog.Error("mysqlDb insert failed", "error", err.Error(), "sql", sqlStr, "data", params, "requestId", ctx.RequestId)
 		return nil
 	}
 
@@ -277,9 +281,9 @@ func (s Sdb) Insert(params map[string]any, tx ...*sqlx.Tx) sql.Result {
 
 // map[string]any{"DB": "", "tableName":"t_user",  "Set":[{"name": "nick", "id": 1}] || {{"name": "nick", "id": 1}}}
 // 这个支持插入单挑数据  或多条数据
-func (s Sdb) InsertMany(params map[string]any, tx ...*sqlx.Tx) sql.Result {
+func (s Sdb) InsertMany(ctx utils.Context, params map[string]any, tx ...*sqlx.Tx) sql.Result {
 	db := s.getDb(params)
-	tableName := s.getTableName(params)
+	tableName := s.getTableName(ctx, params)
 	var sqlStr string = "insert into " + tableName
 	var attrs = []string{}
 	allValues := params["Set"] // []map[string]any
@@ -298,7 +302,8 @@ func (s Sdb) InsertMany(params map[string]any, tx ...*sqlx.Tx) sql.Result {
 			var attrValues = []string{}
 			insertData, ok := ap.(map[string]any)
 			if !ok {
-				slog.Error("mysql Parameter error", "data", allValues, "need", "[]any")
+				slog.Error("mysql Parameter error", "data", allValues, "need", "[]any", "requestId", ctx.RequestId)
+				break
 			}
 			for k, _ := range insertData {
 				attrs = append(attrs, "`"+k+"`")
@@ -321,7 +326,7 @@ func (s Sdb) InsertMany(params map[string]any, tx ...*sqlx.Tx) sql.Result {
 		rs, err = s.Db[db].NamedExec(sqlStr, allValues)
 	}
 	if err != nil {
-		slog.Error("mysqlDb insert failed", "error", err.Error(), "sql", sqlStr, "data", allValues)
+		slog.Error("mysqlDb insert failed", "error", err.Error(), "sql", sqlStr, "data", allValues, "requestId", ctx.RequestId)
 		return nil
 	}
 
@@ -330,9 +335,9 @@ func (s Sdb) InsertMany(params map[string]any, tx ...*sqlx.Tx) sql.Result {
 
 //map[string]any{"DB": "", "tableName":"t_user", "Set":map[string]any, "Update":map[string]any}
 
-func (s Sdb) InsertUpdate(params map[string]any, tx ...*sqlx.Tx) sql.Result {
+func (s Sdb) InsertUpdate(ctx utils.Context, params map[string]any, tx ...*sqlx.Tx) sql.Result {
 	db := s.getDb(params)
-	tableName := s.getTableName(params)
+	tableName := s.getTableName(ctx, params)
 	var sqlStr string = "insert into " + tableName
 
 	setValues := params["Set"].(map[string]any)
@@ -374,16 +379,16 @@ func (s Sdb) InsertUpdate(params map[string]any, tx ...*sqlx.Tx) sql.Result {
 		rs, err = s.Db[db].NamedExec(sqlStr, setValues)
 	}
 	if err != nil {
-		slog.Error("mysqlDb insert failed", "error", err.Error(), "sql", sqlStr, "data", params)
+		slog.Error("mysqlDb insert failed", "error", err.Error(), "sql", sqlStr, "data", params, "requestId", ctx.RequestId)
 		return nil
 	}
 
 	return rs
 }
 
-func (s Sdb) Execute(sqlStr string, params map[string]any, tx ...*sqlx.Tx) sql.Result {
+func (s Sdb) Execute(ctx utils.Context, sqlStr string, params map[string]any, tx ...*sqlx.Tx) sql.Result {
 	//不能做查询， 这里是没有返回结果的
-	q, args, db := s.sqlPares(sqlStr, params)
+	q, args, db := s.sqlPares(ctx, sqlStr, params)
 	var rs sql.Result
 	var err error
 	if len(tx) > 0 && tx[0] != nil {
@@ -392,7 +397,7 @@ func (s Sdb) Execute(sqlStr string, params map[string]any, tx ...*sqlx.Tx) sql.R
 		rs, err = s.Db[db].Exec(q, args...)
 	}
 	if err != nil {
-		slog.Error("mysqlDb Execute failed", "error", err, "sql", q, "data", params)
+		slog.Error("mysqlDb Execute failed", "error", err, "sql", q, "data", params, "requestId", ctx.RequestId)
 		return nil
 	}
 	return rs
@@ -447,31 +452,31 @@ func (s Sdb) Execute(sqlStr string, params map[string]any, tx ...*sqlx.Tx) sql.R
 //
 //}
 
-func (s Sdb) Transaction(queryObj func(Sdb, *sqlx.Tx)) (err error) {
+func (s Sdb) Transaction(ctx utils.Context, queryObj func(Sdb, *sqlx.Tx)) (err error) {
 
 	beginx, err := s.Db[s.DefaultDb].Beginx()
 
 	if err != nil {
-		slog.Error("begin trans failed", "error", err)
+		slog.Error("begin trans failed", "error", err, "requestId", ctx.RequestId)
 		return
 	}
 	defer func() {
 		if p := recover(); p != nil {
 			err = beginx.Rollback()
-			slog.Error("事务回滚", "error", err)
+			slog.Error("事务回滚", "error", err, "requestId", ctx.RequestId)
 			if err != nil {
 				return
 			}
 		} else if err != nil {
 			err = beginx.Rollback()
-			slog.Error("事务回滚", "error", err)
+			slog.Error("事务回滚", "error", err, "requestId", ctx.RequestId)
 			if err != nil {
 				return
 			}
 		} else {
 			err = beginx.Commit()
 			if err != nil {
-				slog.Error("提交失败", "error", err)
+				slog.Error("提交失败", "error", err, "requestId", ctx.RequestId)
 				return
 			}
 		}

@@ -14,7 +14,8 @@ import (
 )
 
 type Context struct {
-	m *sync.Map
+	m         *sync.Map
+	RequestId string
 }
 
 func (y Context) Deadline() (deadline time.Time, ok bool) {

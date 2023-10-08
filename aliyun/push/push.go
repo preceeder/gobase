@@ -14,6 +14,7 @@ import (
 	push20160801 "github.com/alibabacloud-go/push-20160801/v2/client"
 	"github.com/alibabacloud-go/tea/tea"
 	"github.com/bytedance/sonic"
+	"github.com/preceeder/gobase/utils"
 	"github.com/spf13/viper"
 	"log/slog"
 	"os"
@@ -91,7 +92,7 @@ func CreateClient(accessKeyId *string, accessKeySecret *string, endpoint *string
  * @param content string 离线弹窗时的内容
  * @param env string PRODUCT | DEV
  */
-func GetMessageFormat(userIds []string, title string, message map[string]any, StoreOffline bool,
+func GetMessageFormat(ctx utils.Context, userIds []string, title string, message map[string]any, StoreOffline bool,
 	alter bool, content string, env string) *push20160801.MassPushRequestPushTask {
 
 	//message := map[string]any{
@@ -100,12 +101,12 @@ func GetMessageFormat(userIds []string, title string, message map[string]any, St
 	//}
 	extParameters, err := sonic.MarshalString(map[string]any{"push": message})
 	if err != nil {
-		slog.Error("message json marshal error", "error", err.Error())
+		slog.Error("message json marshal error", "error", err.Error(), "requestId", ctx.RequestId)
 		return nil
 	}
 	body, err := sonic.MarshalString(message)
 	if err != nil {
-		slog.Error("message json marshal error", "error", err.Error())
+		slog.Error("message json marshal error", "error", err.Error(), "requestId", ctx.RequestId)
 		return nil
 	}
 
@@ -147,7 +148,7 @@ func GetMessageFormat(userIds []string, title string, message map[string]any, St
  * @param pushTask *push20160801.MassPushRequestPushTask 先调用GetMessageFormat 拿到结果就是这里的参数
  * @param appKey string   由于android 和ios 可能不一样所以这里需要给个参数
  */
-func PushMessage(pushTask *push20160801.MassPushRequestPushTask, appKey string) {
+func PushMessage(ctx utils.Context, pushTask *push20160801.MassPushRequestPushTask, appKey string) {
 	request := &push20160801.MassPushRequest{
 		AppKey:   number.ParseLong(&appKey),
 		PushTask: []*push20160801.MassPushRequestPushTask{pushTask},
@@ -156,7 +157,7 @@ func PushMessage(pushTask *push20160801.MassPushRequestPushTask, appKey string) 
 	// request.pushTask = new Push20160801.MassPushRequest.pushTask{};
 	_, _err := AliPushClient.MassPush(request)
 	if _err != nil {
-		slog.Error("阿里云 推送消息失败", "error", _err.Error())
+		slog.Error("阿里云 推送消息失败", "error", _err.Error(), "requestId", ctx.RequestId)
 		return
 	}
 }

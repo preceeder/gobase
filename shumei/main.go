@@ -167,7 +167,6 @@ func (s ShuMei) Send(url string, body any, response any) (map[string]any, error)
 		EnableTrace().
 		SetBody(body).
 		Post(url)
-	fmt.Println(res.Result())
 	if response == nil {
 		var data map[string]interface{}
 		_ = sonic.Unmarshal(res.Body(), &data)
@@ -217,7 +216,7 @@ func (s ShuMei) textLangHandler(lang string) string {
 }
 
 // 同步 图片检查
-func (s ShuMei) AsyncImage(p ShumeiAsyncImage) bool {
+func (s ShuMei) AsyncImage(ctx utils.Context, p ShumeiAsyncImage) bool {
 	turl := s.ShumeiUrl.ImageUrl //  "http://api-img-sh.fengkongcloud.com/image/v4"
 
 	data := map[string]interface{}{
@@ -251,18 +250,18 @@ func (s ShuMei) AsyncImage(p ShumeiAsyncImage) bool {
 	res := &PublicShortResponse{}
 	_, err := s.Send(turl, payload, res)
 	if err != nil {
-		slog.Error("shumei image request", "error", err.Error())
+		slog.Error("shumei image request", "error", err.Error(), "requestId", ctx.RequestId)
 		return false
 	}
 
 	if res.Code != 1100 {
-		slog.Error("AsyncVoiceFile", "error", res.Message, "requestId", res.RequestID, "code", res.Code)
+		slog.Error("AsyncVoiceFile", "error", res.Message, "requestId", res.RequestID, "code", res.Code, "requestId", ctx.RequestId)
 		return false
 	}
 	return true
 }
 
-func (s ShuMei) Image(p ShumeiImage) bool {
+func (s ShuMei) Image(ctx utils.Context, p ShumeiImage) bool {
 	//turl := "http://api-img-xjp.fengkongcloud.com/image/v4"
 	turl := s.ShumeiUrl.ImageUrl //"http://api-img-sh.fengkongcloud.com/image/v4"
 
@@ -292,7 +291,7 @@ func (s ShuMei) Image(p ShumeiImage) bool {
 	res := &PublicLongResponse{}
 	_, err := s.Send(turl, payload, res)
 	if err != nil {
-		slog.Error("shumei image request", "error", err.Error())
+		slog.Error("shumei image request", "error", err.Error(), "requestId", ctx.RequestId)
 		return true
 	}
 
@@ -304,7 +303,7 @@ func (s ShuMei) Image(p ShumeiImage) bool {
 	return true
 }
 
-func (s ShuMei) Text(p ShumeiText) bool {
+func (s ShuMei) Text(ctx utils.Context, p ShumeiText) bool {
 	turl := s.ShumeiUrl.TextUrl //"http://api-text-sh.fengkongcloud.com/text/v4"
 	data := map[string]interface{}{
 		"text":    p.Text,
@@ -332,7 +331,7 @@ func (s ShuMei) Text(p ShumeiText) bool {
 	res := &PublicLongResponse{}
 	_, err := s.Send(turl, payload, res)
 	if err != nil {
-		slog.Error("shumei image request", "error", err.Error())
+		slog.Error("shumei image request", "error", err.Error(), "requestId", ctx.RequestId)
 		return true
 	}
 	if res.Code == 1100 {
@@ -340,12 +339,11 @@ func (s ShuMei) Text(p ShumeiText) bool {
 			return false
 		}
 	}
-	fmt.Println(res)
 	return true
 }
 
 // 只支持 url的 同步
-func (s ShuMei) VoiceFile(p ShumeiVoiceFile) bool {
+func (s ShuMei) VoiceFile(ctx utils.Context, p ShumeiVoiceFile) bool {
 	turl := s.ShumeiUrl.VoiceUrl // "http://api-audio-sh.fengkongcloud.com/audiomessage/v4"
 	data := map[string]interface{}{
 		"tokenId": s.tokenHandler(p.UserId),
@@ -371,7 +369,7 @@ func (s ShuMei) VoiceFile(p ShumeiVoiceFile) bool {
 	res := &VoiceFileResponse{}
 	_, err := s.Send(turl, payload, res)
 	if err != nil {
-		slog.Error("shumei image request", "error", err.Error())
+		slog.Error("shumei image request", "error", err.Error(), "requestId", ctx.RequestId)
 		return true
 	}
 	if res.Code == 1100 {
@@ -382,7 +380,7 @@ func (s ShuMei) VoiceFile(p ShumeiVoiceFile) bool {
 	return true
 }
 
-func (s ShuMei) AsyncVoiceFile(p ShumeiVoiceFile) bool {
+func (s ShuMei) AsyncVoiceFile(ctx utils.Context, p ShumeiVoiceFile) bool {
 	turl := s.ShumeiUrl.AsyncVoiceUrl //"http://api-audio-sh.fengkongcloud.com/audio/v4"
 	data := map[string]interface{}{
 		"tokenId": s.tokenHandler(p.UserId),
@@ -410,17 +408,17 @@ func (s ShuMei) AsyncVoiceFile(p ShumeiVoiceFile) bool {
 	res := &PublicShortResponse{}
 	_, err := s.Send(turl, payload, res)
 	if err != nil {
-		slog.Error("shumei image request", "error", err.Error())
+		slog.Error("shumei image request", "error", err.Error(), "requestId", ctx.RequestId)
 		return false
 	}
 	if res.Code != 1100 {
-		slog.Error("AsyncVoiceFile", "error", res.Message, "requestId", res.RequestID, "code", res.Code)
+		slog.Error("AsyncVoiceFile", "error", res.Message, "requestId", res.RequestID, "code", res.Code, "requestId", ctx.RequestId)
 		return false
 	}
 	return true
 }
 
-func (s ShuMei) AsyncVideoFile(p ShumeiAsyncVideoFile) bool {
+func (s ShuMei) AsyncVideoFile(ctx utils.Context, p ShumeiAsyncVideoFile) bool {
 	//上海节点
 	turl := s.ShumeiUrl.AsyncVideoUrl // "http://api-video-sh.fengkongcloud.com/video/v4"
 	data := map[string]interface{}{
@@ -454,18 +452,18 @@ func (s ShuMei) AsyncVideoFile(p ShumeiAsyncVideoFile) bool {
 	res := &VideoFileResponse{}
 	_, err := s.Send(turl, payload, res)
 	if err != nil {
-		slog.Error("shumei image request", "error", err.Error())
+		slog.Error("shumei image request", "error", err.Error(), "requestId", ctx.RequestId)
 		return false
 	}
 	if res.Code != 1100 {
-		slog.Error("AsyncVoiceFile", "error", res.Message, "requestId", res.RequestID, "code", res.Code)
+		slog.Error("AsyncVoiceFile", "error", res.Message, "requestId", res.RequestID, "code", res.Code, "requestId", ctx.RequestId)
 		return false
 	}
 	return true
 }
 
 // 音频流检查
-func (s ShuMei) AudioStream(p ShumeiAsyncAudioStream) (bool, *AudioStreamResponse) {
+func (s ShuMei) AudioStream(ctx utils.Context, p ShumeiAsyncAudioStream) (bool, *AudioStreamResponse) {
 	turl := s.ShumeiUrl.VoiceStreamUrl //"http://api-audiostream-sh.fengkongcloud.com/audiostream/v4"
 	data := map[string]interface{}{
 		"tokenId":    s.tokenHandler(p.UserId),
@@ -505,14 +503,14 @@ func (s ShuMei) AudioStream(p ShumeiAsyncAudioStream) (bool, *AudioStreamRespons
 	res := &AudioStreamResponse{}
 	_, err := s.Send(turl, payload, res)
 	if err != nil {
-		slog.Error("shumei AsyncVoiceFile request", "error", err.Error())
+		slog.Error("shumei AsyncVoiceFile request", "error", err.Error(), "requestId", ctx.RequestId)
 		return false, nil
 	}
 	if res.Code != 1100 {
-		slog.Error("AudioStream", "error", res.Message, "requestId", res.RequestID, "code", res.Code)
+		slog.Error("AudioStream", "error", res.Message, "requestId", res.RequestID, "code", res.Code, "requestId", ctx.RequestId)
 		return false, nil
 	} else if res.Code == 1100 && res.Detail.Errorcode != 0 {
-		slog.Error("AsyncVoiceFile", "error", res.Message, "requestId", res.RequestID, "errorCode", res.Detail.Errorcode)
+		slog.Error("AsyncVoiceFile", "error", res.Message, "requestId", res.RequestID, "errorCode", res.Detail.Errorcode, "requestId", ctx.RequestId)
 		return false, nil
 	}
 
@@ -520,7 +518,7 @@ func (s ShuMei) AudioStream(p ShumeiAsyncAudioStream) (bool, *AudioStreamRespons
 }
 
 // 视频流检查
-func (s ShuMei) VideoStream(p ShumeiAsyncVideoStream) (bool, *AudioStreamResponse) {
+func (s ShuMei) VideoStream(ctx utils.Context, p ShumeiAsyncVideoStream) (bool, *AudioStreamResponse) {
 	turl := s.ShumeiUrl.VideoStreamUrl //"http://api-videostream-sh.fengkongcloud.com/videostream/v4"
 	data := map[string]interface{}{
 		"tokenId":    s.tokenHandler(p.UserId),
@@ -565,14 +563,14 @@ func (s ShuMei) VideoStream(p ShumeiAsyncVideoStream) (bool, *AudioStreamRespons
 	res := &AudioStreamResponse{}
 	_, err := s.Send(turl, payload, res)
 	if err != nil {
-		slog.Error("shumei AsyncVoiceFile request", "error", err.Error())
+		slog.Error("shumei AsyncVoiceFile request", "error", err.Error(), "requestId", ctx.RequestId)
 		return false, nil
 	}
 	if res.Code != 1100 {
-		slog.Error("AudioStream", "error", res.Message, "requestId", res.RequestID, "code", res.Code)
+		slog.Error("AudioStream", "error", res.Message, "requestId", res.RequestID, "code", res.Code, "requestId", ctx.RequestId)
 		return false, nil
 	} else if res.Code == 1100 && res.Detail.Errorcode != 0 {
-		slog.Error("AsyncVoiceFile", "error", res.Message, "requestId", res.RequestID, "errorCode", res.Detail.Errorcode)
+		slog.Error("AsyncVoiceFile", "error", res.Message, "requestId", res.RequestID, "errorCode", res.Detail.Errorcode, "requestId", ctx.RequestId)
 		return false, nil
 	}
 
@@ -583,7 +581,7 @@ func (s ShuMei) VideoStream(p ShumeiAsyncVideoStream) (bool, *AudioStreamRespons
  * @param requestId string 请求id
  * @ltype string 类型 voice｜video
  */
-func (s ShuMei) CloseStreamCheck(requestId string, ltype string) (bool, *CloseStreamResponse) {
+func (s ShuMei) CloseStreamCheck(ctx utils.Context, requestId string, ltype string) (bool, *CloseStreamResponse) {
 	turl := ""
 	if ltype == "video" {
 		turl = s.ShumeiUrl.VideoStreamCloseUrl
@@ -599,7 +597,7 @@ func (s ShuMei) CloseStreamCheck(requestId string, ltype string) (bool, *CloseSt
 	res := &CloseStreamResponse{}
 	_, err := s.Send(turl, payload, res)
 	if err != nil {
-		slog.Error("shumei close stream faild", "error", err.Error())
+		slog.Error("shumei close stream faild", "error", err.Error(), "requestId", ctx.RequestId)
 		return false, nil
 	}
 	return true, res

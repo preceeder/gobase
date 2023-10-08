@@ -10,6 +10,7 @@ package jigou
 import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
+	"github.com/preceeder/gobase/utils"
 	"github.com/spf13/viper"
 	"net/url"
 	"reflect"
@@ -47,7 +48,7 @@ func TestJiGou_GetRoomNumbers(t *testing.T) {
 				ServerSecret: tt.fields.ServerSecret,
 				RestyClient:  tt.fields.RestyClient,
 			}
-			res, err := j.GetRoomNumbers(tt.args.roomId)
+			res, err := j.GetRoomNumbers(utils.Context{}, tt.args.roomId)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -141,7 +142,7 @@ func TestJiGou_CloseRoom(t *testing.T) {
 				ServerSecret: tt.fields.ServerSecret,
 				RestyClient:  tt.fields.RestyClient,
 			}
-			got, err := j.CloseRoom(tt.args.RoomId)
+			got, err := j.CloseRoom(utils.Context{}, tt.args.RoomId)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CloseRoom() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -174,7 +175,7 @@ func TestJiGou_GenerateIdentifyToken(t *testing.T) {
 				ServerSecret: tt.fields.ServerSecret,
 				RestyClient:  tt.fields.RestyClient,
 			}
-			got, err := j.GenerateIdentifyToken()
+			got, err := j.GenerateIdentifyToken(utils.Context{})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GenerateIdentifyToken() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -212,7 +213,7 @@ func TestJiGou_Get(t *testing.T) {
 				ServerSecret: tt.fields.ServerSecret,
 				RestyClient:  tt.fields.RestyClient,
 			}
-			if err := j.Get(tt.args.url, tt.args.params, tt.args.resBody); (err != nil) != tt.wantErr {
+			if err := j.Get(utils.Context{}, tt.args.url, tt.args.params, tt.args.resBody); (err != nil) != tt.wantErr {
 				t.Errorf("Get() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -271,7 +272,7 @@ func TestJiGou_GetRoomNumbers1(t *testing.T) {
 				ServerSecret: tt.fields.ServerSecret,
 				RestyClient:  tt.fields.RestyClient,
 			}
-			got, err := j.GetRoomNumbers(tt.args.roomId)
+			got, err := j.GetRoomNumbers(utils.Context{}, tt.args.roomId)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetRoomNumbers() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -309,7 +310,7 @@ func TestJiGou_GetToken(t *testing.T) {
 				ServerSecret: tt.fields.ServerSecret,
 				RestyClient:  tt.fields.RestyClient,
 			}
-			got, err := j.GetToken(tt.args.userId, tt.args.roomId)
+			got, err := j.GetToken(utils.Context{}, tt.args.userId, tt.args.roomId)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetToken() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -349,7 +350,7 @@ func TestJiGou_SendCustomCommand(t *testing.T) {
 				ServerSecret: tt.fields.ServerSecret,
 				RestyClient:  tt.fields.RestyClient,
 			}
-			got, err := j.SendCustomCommand(tt.args.roomId, tt.args.fromUserId, tt.args.toUserId, tt.args.message)
+			got, err := j.SendCustomCommand(utils.Context{}, tt.args.roomId, tt.args.fromUserId, tt.args.toUserId, tt.args.message)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("SendCustomCommand() error = %v, wantErr %v", err, tt.wantErr)
 				return

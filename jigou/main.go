@@ -15,6 +15,7 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/duke-git/lancet/v2/cryptor"
 	"github.com/go-resty/resty/v2"
+	"github.com/preceeder/gobase/utils"
 	"github.com/spf13/viper"
 	"github.com/zegoim/zego_server_assistant/token/go/src/token04"
 	"log/slog"
@@ -118,13 +119,13 @@ func (j JiGou) GetPublicParams() map[string]string {
 	return publicParams
 }
 
-func (j JiGou) Get(url string, params url.Values, resBody any) error {
+func (j JiGou) Get(ctx utils.Context, url string, params url.Values, resBody any) error {
 	publicParams := j.GetPublicParams()
 	//finalParams := maputil.Merge[string, string](params, publicParams)
 	_, err := j.RestyClient.R().EnableTrace().SetHeader("Accept", "application/json").
 		SetResult(resBody).SetQueryParams(publicParams).SetQueryParamsFromValues(params).Get(url)
 	if err != nil {
-		slog.Error("jigou request", "error", err.Error())
+		slog.Error("jigou request", "error", err.Error(), "requestId", ctx.RequestId)
 		return err
 	}
 	//var tempResp = &map[string]any{}
@@ -134,7 +135,7 @@ func (j JiGou) Get(url string, params url.Values, resBody any) error {
 
 // 关闭房间
 
-func (j JiGou) CloseRoom(RoomId string) (PublicResponse, error) {
+func (j JiGou) CloseRoom(ctx utils.Context, RoomId string) (PublicResponse, error) {
 	//roomId := map[string]string{
 	//	"RoomId[]": RoomId,
 	//}
@@ -143,25 +144,25 @@ func (j JiGou) CloseRoom(RoomId string) (PublicResponse, error) {
 	}
 
 	resBody := &PublicResponse{}
-	err := j.Get(JiGouCloseRoom, roomId, resBody)
+	err := j.Get(ctx, JiGouCloseRoom, roomId, resBody)
 	return *resBody, err
 }
 
 // 获取房间的人数
 
-func (j JiGou) GetRoomNumbers(roomId string) (RoomNumbers, error) {
+func (j JiGou) GetRoomNumbers(ctx utils.Context, roomId string) (RoomNumbers, error) {
 	params := url.Values{
 		"RoomId[]": []string{roomId},
 	}
 	resBody := &RoomNumbers{}
-	err := j.Get(JiGouDescribeUserNum, params, resBody)
+	err := j.Get(ctx, JiGouDescribeUserNum, params, resBody)
 	//fmt.Printf("%#v\n", resBody)
 	return *resBody, err
 }
 
 // 发送自定义消息
 
-func (j JiGou) SendCustomCommand(roomId string, fromUserId string, toUserId []string, message string) (SendCustomCommand, error) {
+func (j JiGou) SendCustomCommand(ctx utils.Context, roomId string, fromUserId string, toUserId []string, message string) (SendCustomCommand, error) {
 	//params := map[string]string{
 	//	"RoomId":         roomId,
 	//	"FromUserId":     fromUserId,
@@ -175,21 +176,21 @@ func (j JiGou) SendCustomCommand(roomId string, fromUserId string, toUserId []st
 		"MessageContent": []string{message},
 	}
 	resBody := &SendCustomCommand{}
-	err := j.Get(JiGouDescribeUserNum, params, resBody)
+	err := j.Get(ctx, JiGouDescribeUserNum, params, resBody)
 	//fmt.Printf("%#v\n", resBody)
 	return *resBody, err
 }
 
 // 获取 音视频流审核鉴权 Token
 
-func (j JiGou) GenerateIdentifyToken() (GenerateIdentifyToken, error) {
+func (j JiGou) GenerateIdentifyToken(ctx utils.Context) (GenerateIdentifyToken, error) {
 	resBody := &GenerateIdentifyToken{}
-	err := j.Get(JiGouGenerateIdentifyToken, nil, resBody)
+	err := j.Get(ctx, JiGouGenerateIdentifyToken, nil, resBody)
 	return *resBody, err
 }
 
 // 获取jigou权限认证token   客户端使用
-func (j JiGou) GetToken(userId, roomId string) (string, error) {
+func (j JiGou) GetToken(ctx utils.Context, userId, roomId string) (string, error) {
 	var effectiveTimeInSeconds int64 = 3600 // token 的有效时长，单位：秒
 	//业务权限认证配置，可以配置多个权限位
 	privilege := make(map[int]int)
@@ -203,7 +204,7 @@ func (j JiGou) GetToken(userId, roomId string) (string, error) {
 	}
 	payload, err := sonic.MarshalString(payloadData)
 	if err != nil {
-		slog.Error("GetToken error", "error", err.Error())
+		slog.Error("GetToken error", "error", err.Error(), "requestId", ctx.RequestId)
 		return "", err
 	}
 	//生成token

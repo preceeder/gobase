@@ -10,6 +10,7 @@ package mysqlDb
 import (
 	"database/sql"
 	"github.com/jmoiron/sqlx"
+	"github.com/preceeder/gobase/utils"
 	"github.com/spf13/viper"
 	"reflect"
 	"testing"
@@ -86,7 +87,7 @@ func TestSdb_Execute(t *testing.T) {
 				Db:        tt.fields.Db,
 				DefaultDb: tt.fields.DefaultDb,
 			}
-			if got := s.Execute(tt.args.sqlStr, tt.args.params, tt.args.tx...); !reflect.DeepEqual(got, tt.want) {
+			if got := s.Execute(utils.Context{}, tt.args.sqlStr, tt.args.params, tt.args.tx...); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Execute() = %v, want %v", got, tt.want)
 			}
 		})
@@ -116,7 +117,7 @@ func TestSdb_Fetch(t *testing.T) {
 				Db:        tt.fields.Db,
 				DefaultDb: tt.fields.DefaultDb,
 			}
-			s.Fetch(tt.args.sqlStr, tt.args.params, tt.args.row)
+			s.Fetch(utils.Context{}, tt.args.sqlStr, tt.args.params, tt.args.row)
 		})
 	}
 }
@@ -175,7 +176,7 @@ func TestSdb_Insert(t *testing.T) {
 				Db:        tt.fields.Db,
 				DefaultDb: tt.fields.DefaultDb,
 			}
-			if got := s.Insert(tt.args.params, tt.args.tx...); !reflect.DeepEqual(got, tt.want) {
+			if got := s.Insert(utils.Context{}, tt.args.params, tt.args.tx...); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Insert() = %v, want %v", got, tt.want)
 			}
 		})
@@ -207,7 +208,7 @@ func TestSdb_InsertMany(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := MysqlDb.InsertMany(tt.args.params, tt.args.tx...); !reflect.DeepEqual(got, tt.want) {
+			if got := MysqlDb.InsertMany(utils.Context{}, tt.args.params, tt.args.tx...); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("InsertMany() = %v, want %v", got, tt.want)
 			}
 		})
@@ -237,7 +238,7 @@ func TestSdb_InsertUpdate(t *testing.T) {
 				Db:        tt.fields.Db,
 				DefaultDb: tt.fields.DefaultDb,
 			}
-			if got := s.InsertUpdate(tt.args.params, tt.args.tx...); !reflect.DeepEqual(got, tt.want) {
+			if got := s.InsertUpdate(utils.Context{}, tt.args.params, tt.args.tx...); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("InsertUpdate() = %v, want %v", got, tt.want)
 			}
 		})
@@ -267,7 +268,7 @@ func TestSdb_Select(t *testing.T) {
 				Db:        tt.fields.Db,
 				DefaultDb: tt.fields.DefaultDb,
 			}
-			s.Select(tt.args.sqlStr, tt.args.params, tt.args.row)
+			s.Select(utils.Context{}, tt.args.sqlStr, tt.args.params, tt.args.row)
 		})
 	}
 }
@@ -294,7 +295,7 @@ func TestSdb_Transaction(t *testing.T) {
 				Db:        tt.fields.Db,
 				DefaultDb: tt.fields.DefaultDb,
 			}
-			if err := s.Transaction(tt.args.queryObj); (err != nil) != tt.wantErr {
+			if err := s.Transaction(utils.Context{}, tt.args.queryObj); (err != nil) != tt.wantErr {
 				t.Errorf("Transaction() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -324,7 +325,7 @@ func TestSdb_Update(t *testing.T) {
 				Db:        tt.fields.Db,
 				DefaultDb: tt.fields.DefaultDb,
 			}
-			if got := s.Update(tt.args.params, tt.args.tx...); got != tt.want {
+			if got := s.Update(utils.Context{}, tt.args.params, tt.args.tx...); got != tt.want {
 				t.Errorf("Update() = %v, want %v", got, tt.want)
 			}
 		})
@@ -407,7 +408,7 @@ func TestSdb_getTableName(t *testing.T) {
 				Db:        tt.fields.Db,
 				DefaultDb: tt.fields.DefaultDb,
 			}
-			if gotTableName := s.getTableName(tt.args.params); gotTableName != tt.wantTableName {
+			if gotTableName := s.getTableName(utils.Context{}, tt.args.params); gotTableName != tt.wantTableName {
 				t.Errorf("getTableName() = %v, want %v", gotTableName, tt.wantTableName)
 			}
 		})
@@ -439,7 +440,7 @@ func TestSdb_sqlPares(t *testing.T) {
 				Db:        tt.fields.Db,
 				DefaultDb: tt.fields.DefaultDb,
 			}
-			gotSql, gotArgs, gotDb := s.sqlPares(tt.args.osql, tt.args.params)
+			gotSql, gotArgs, gotDb := s.sqlPares(utils.Context{}, tt.args.osql, tt.args.params)
 			if gotSql != tt.wantSql {
 				t.Errorf("sqlPares() gotSql = %v, want %v", gotSql, tt.wantSql)
 			}

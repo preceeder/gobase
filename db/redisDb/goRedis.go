@@ -133,7 +133,7 @@ func RedisClose() {
 	}
 }
 
-func getScriptKv[T string | any](mm map[string]any, kmm string, source map[string]T, fData map[string]any) ([]T, error) {
+func getScriptKv[T string | any](context2 utils.Context, mm map[string]any, kmm string, source map[string]T, fData map[string]any) ([]T, error) {
 	var sk = make([]T, 0)
 	if kd, ok := mm[kmm]; ok {
 		vv := kd.([]string)
@@ -143,7 +143,7 @@ func getScriptKv[T string | any](mm map[string]any, kmm string, source map[strin
 			} else if kv, ok := fData[kddd]; ok {
 				sk = append(sk, kv.(T))
 			} else {
-				slog.Error("ExecScript error", "error", "keys key is not enough", "key", kddd)
+				slog.Error("ExecScript error", "requestId", context2.RequestId, "error", "keys key is not enough", "key", kddd)
 				return nil, utils.BaseRunTimeError{ErrorCode: 500, Message: "redis error"}
 			}
 		}
@@ -175,10 +175,11 @@ func getDb(d *string) (db *redis.Client, err error) {
 //	}
 
 // 执行 lua 脚本
-func ExecScript(sc map[string]any, keys map[string]string, values map[string]any) (*redis.Cmd, error) {
+func ExecScript(context2 utils.Context, sc map[string]any, keys map[string]string, values map[string]any) (*redis.Cmd, error) {
 	tdb := sc["db"].(string)
 	rd, err := getDb(&tdb)
 	if err != nil {
+		slog.Error(err.Error(), "requestId", context2.RequestId)
 		panic(err)
 	}
 	var fData = make(map[string]any)
@@ -196,22 +197,22 @@ func ExecScript(sc map[string]any, keys map[string]string, values map[string]any
 
 	}
 
-	sk, err := getScriptKv(sc, "keys", keys, fData)
+	sk, err := getScriptKv(context2, sc, "keys", keys, fData)
 	if err != nil {
 		panic(utils.BaseRunTimeError{ErrorCode: 500, Message: "redis error1"})
 	}
-	argvs, err := getScriptKv(sc, "argv", values, fData)
+	argvs, err := getScriptKv(context2, sc, "argv", values, fData)
 	if err != nil {
 		panic(utils.BaseRunTimeError{ErrorCode: 500, Message: "redis error2"})
 	}
-	res, err := Script(rd, sc["script"].(string), sk, argvs)
+	res, err := Script(context2, rd, sc["script"].(string), sk, argvs)
 	if err != nil {
 		panic(utils.BaseRunTimeError{ErrorCode: 500, Message: "redis error3"})
 	}
 	return res, nil
 }
 
-func Script(db *redis.Client, script string, keys []string, values []any) (*redis.Cmd, error) {
+func Script(context2 utils.Context, db *redis.Client, script string, keys []string, values []any) (*redis.Cmd, error) {
 	//script := `
 	//local key1 = KEYS[1]
 	//local user_id = ARGV[1]
@@ -229,27 +230,27 @@ func Script(db *redis.Client, script string, keys []string, values []any) (*redi
 	}
 	ns, err := rd.ScriptExists(ctx, hesHasScript).Result()
 	if err != nil {
-		slog.Error("ScriptExists error", "error", err.Error())
+		slog.Error("ScriptExists error", "error", err.Error(), "requestId", context2.RequestId)
 		return nil, err
 	}
 	//不存在则加载
 	if !ns[0] {
 		_, err := rd.ScriptLoad(ctx, script).Result()
 		if err != nil {
-			slog.Error("ScriptLoad error", "error", err.Error())
+			slog.Error("ScriptLoad error", "error", err.Error(), "requestId", context2.RequestId)
 			return nil, err
 		}
 	}
 	rcmd := rd.EvalSha(ctx, hesHasScript, keys, values...)
 	err = rcmd.Err()
 	if err != nil {
-		slog.Error("EvalSha error", "error", err.Error())
+		slog.Error("EvalSha error", "error", err.Error(), "requestId", context2.RequestId)
 		return nil, err
 	}
 	return rcmd, nil
 }
 
-func Do(cmd map[string]any, agrs map[string]any, includeArgs ...any) (*redis.Cmd, error) {
+func Do(context2 utils.Context, cmd map[string]any, agrs map[string]any, includeArgs ...any) (*redis.Cmd, error) {
 	/*
 			cmd   map[string]any = {
 					"cmd": "get {{ss}}
@@ -262,6 +263,7 @@ func Do(cmd map[string]any, agrs map[string]any, includeArgs ...any) (*redis.Cmd
 	ctx := context.Background()
 	cmdStr, err := RedisCmdBindName(cmd["cmd"].(string), agrs)
 	if err != nil {
+		slog.Error("redisDb args pares err", "args", agrs, "cmd", cmd["cmd"], "requestId", context2.RequestId)
 		panic("redisDb args pares err")
 	}
 
@@ -277,7 +279,7 @@ func Do(cmd map[string]any, agrs map[string]any, includeArgs ...any) (*redis.Cmd
 
 	rcmd := rd.Do(ctx, cmdStr...)
 	if rcmd.Err() != nil {
-		slog.Error("redisDb exec failed", "error", rcmd.Err().Error())
+		slog.Error("redisDb exec failed", "error", rcmd.Err().Error(), "requestId", context2.RequestId)
 		return nil, rcmd.Err()
 	}
 
@@ -299,14 +301,17 @@ func Do(cmd map[string]any, agrs map[string]any, includeArgs ...any) (*redis.Cmd
 
 		rkey, ok := cmd["key"]
 		if !ok {
+			slog.Error("set exp, cmd must has key", "cmd", cmd["cmd"], "requestId", context2.RequestId)
 			panic("set exp, cmd must has key")
 		}
 		keyStr, err := utils.StrBindName(rkey.(string), agrs, []byte(""))
 		if err != nil {
+			slog.Error("redisDb key args pares err", "requestId", context2.RequestId)
 			panic("redisDb key args pares err")
 		}
 		err = rd.Expire(ctx, keyStr, expt).Err()
 		if err != nil {
+			slog.Error("redisDb key set exp err: "+err.Error(), "requestId", context2.RequestId)
 			panic("redisDb key set exp err: " + err.Error())
 		}
 	}
@@ -316,10 +321,11 @@ func Do(cmd map[string]any, agrs map[string]any, includeArgs ...any) (*redis.Cmd
 
 // 分布式事务锁
 type RedisLocks struct {
-	Value string
-	Key   string
-	Exp   int64
-	db    *redis.Client
+	Value    string
+	Key      string
+	Exp      int64
+	db       *redis.Client
+	Context2 utils.Context
 }
 
 // pao一个lua 脚本  加锁， 释放锁
@@ -343,6 +349,7 @@ func (r *RedisLocks) GetLock(db ...string) bool {
 	expl := time.Duration(r.Exp * 1000000)
 	res, err := r.db.SetNX(ctx, r.Key, r.Value, expl).Result()
 	if err != nil {
+		slog.Error("redisDb 加锁失败 key: "+r.Key+"err: "+err.Error(), "requestId", r.Context2.GetString("requestId"))
 		panic("redisDb 加锁失败 key: " + r.Key + "err: " + err.Error())
 	}
 	return res
@@ -356,7 +363,7 @@ func (r *RedisLocks) ReleaseLock() {
 	else
 		return 0
 	end`
-	ok, err := Script(r.db, del, []string{r.Key}, []any{r.Value})
+	ok, err := Script(r.Context2, r.db, del, []string{r.Key}, []any{r.Value})
 	if err != nil {
 		panic("redisDb ReleaseLock err: " + err.Error())
 	}
