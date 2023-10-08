@@ -11,6 +11,7 @@ import (
 	"net/http/httputil"
 	"os"
 	"runtime/debug"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -44,7 +45,7 @@ func GinLogger() gin.HandlerFunc {
 		start := time.Now()
 		path := c.Request.URL.Path
 		query := c.Request.URL.RawQuery
-		requestId := string(datetimeh.Now().TimestampMilli()) + utils.RandStr(3)
+		requestId := strconv.FormatInt(datetimeh.Now().TimestampMilli(), 10) + utils.RandStr(3)
 		c.Set("requestId", requestId)
 		c.Next()
 

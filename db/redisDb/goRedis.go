@@ -212,7 +212,7 @@ func ExecScript(context2 utils.Context, sc map[string]any, keys map[string]strin
 	return res, nil
 }
 
-func Script(context2 utils.Context, db *redis.Client, script string, keys []string, values []any) (*redis.Cmd, error) {
+func Script(ctx utils.Context, db *redis.Client, script string, keys []string, values []any) (*redis.Cmd, error) {
 	//script := `
 	//local key1 = KEYS[1]
 	//local user_id = ARGV[1]
@@ -220,7 +220,6 @@ func Script(context2 utils.Context, db *redis.Client, script string, keys []stri
 	//result_data[1] = redisDb.call("set", key1, user_id)
 	//result_data[2] = redisDb.call("GET", key1)
 	//return result_data`
-	ctx := context.Background()
 	hesHasScript := cryptor.Sha1(script)
 	var rd *redis.Client
 	if db == nil {
@@ -230,27 +229,27 @@ func Script(context2 utils.Context, db *redis.Client, script string, keys []stri
 	}
 	ns, err := rd.ScriptExists(ctx, hesHasScript).Result()
 	if err != nil {
-		slog.Error("ScriptExists error", "error", err.Error(), "requestId", context2.RequestId)
+		slog.Error("ScriptExists error", "error", err.Error(), "requestId", ctx.RequestId)
 		return nil, err
 	}
 	//不存在则加载
 	if !ns[0] {
 		_, err := rd.ScriptLoad(ctx, script).Result()
 		if err != nil {
-			slog.Error("ScriptLoad error", "error", err.Error(), "requestId", context2.RequestId)
+			slog.Error("ScriptLoad error", "error", err.Error(), "requestId", ctx.RequestId)
 			return nil, err
 		}
 	}
 	rcmd := rd.EvalSha(ctx, hesHasScript, keys, values...)
 	err = rcmd.Err()
 	if err != nil {
-		slog.Error("EvalSha error", "error", err.Error(), "requestId", context2.RequestId)
+		slog.Error("EvalSha error", "error", err.Error(), "requestId", ctx.RequestId)
 		return nil, err
 	}
 	return rcmd, nil
 }
 
-func Do(context2 utils.Context, cmd map[string]any, agrs map[string]any, includeArgs ...any) (*redis.Cmd, error) {
+func Do(ctx utils.Context, cmd map[string]any, agrs map[string]any, includeArgs ...any) (*redis.Cmd, error) {
 	/*
 			cmd   map[string]any = {
 					"cmd": "get {{ss}}
@@ -260,10 +259,9 @@ func Do(context2 utils.Context, cmd map[string]any, agrs map[string]any, include
 					"db": "",
 					}
 	*/
-	ctx := context.Background()
 	cmdStr, err := RedisCmdBindName(cmd["cmd"].(string), agrs)
 	if err != nil {
-		slog.Error("redisDb args pares err", "args", agrs, "cmd", cmd["cmd"], "requestId", context2.RequestId)
+		slog.Error("redisDb args pares err", "args", agrs, "cmd", cmd["cmd"], "requestId", ctx.RequestId)
 		panic("redisDb args pares err")
 	}
 
@@ -279,7 +277,7 @@ func Do(context2 utils.Context, cmd map[string]any, agrs map[string]any, include
 
 	rcmd := rd.Do(ctx, cmdStr...)
 	if rcmd.Err() != nil {
-		slog.Error("redisDb exec failed", "error", rcmd.Err().Error(), "requestId", context2.RequestId)
+		slog.Error("redisDb exec failed", "error", rcmd.Err().Error(), "requestId", ctx.RequestId)
 		return nil, rcmd.Err()
 	}
 
@@ -301,17 +299,17 @@ func Do(context2 utils.Context, cmd map[string]any, agrs map[string]any, include
 
 		rkey, ok := cmd["key"]
 		if !ok {
-			slog.Error("set exp, cmd must has key", "cmd", cmd["cmd"], "requestId", context2.RequestId)
+			slog.Error("set exp, cmd must has key", "cmd", cmd["cmd"], "requestId", ctx.RequestId)
 			panic("set exp, cmd must has key")
 		}
 		keyStr, err := utils.StrBindName(rkey.(string), agrs, []byte(""))
 		if err != nil {
-			slog.Error("redisDb key args pares err", "requestId", context2.RequestId)
+			slog.Error("redisDb key args pares err", "requestId", ctx.RequestId)
 			panic("redisDb key args pares err")
 		}
 		err = rd.Expire(ctx, keyStr, expt).Err()
 		if err != nil {
-			slog.Error("redisDb key set exp err: "+err.Error(), "requestId", context2.RequestId)
+			slog.Error("redisDb key set exp err: "+err.Error(), "requestId", ctx.RequestId)
 			panic("redisDb key set exp err: " + err.Error())
 		}
 	}
