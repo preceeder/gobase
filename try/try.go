@@ -5,7 +5,7 @@ Author:      Chenghu
 Date:       2023/8/25 11:39
 Change Activity:
 */
-package gobase
+package try
 
 import (
 	"bytes"
