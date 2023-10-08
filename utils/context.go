@@ -20,22 +20,22 @@ type Context struct {
 
 func (y Context) Deadline() (deadline time.Time, ok bool) {
 	//TODO implement me
-	panic("implement me")
+	return
 }
 
 func (y Context) Done() <-chan struct{} {
 	//TODO implement me
-	panic("implement me")
+	return nil
 }
 
 func (y Context) Err() error {
 	//TODO implement me
-	panic("implement me")
+	return nil
 }
 
 func (y Context) Value(key any) any {
 	//TODO implement me
-	panic("implement me")
+	return nil
 }
 
 func (c *Context) Set(key any, v any) {

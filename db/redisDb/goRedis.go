@@ -274,7 +274,7 @@ func Do(ctx utils.Context, cmd map[string]any, agrs map[string]any, includeArgs 
 	if len(includeArgs) > 0 {
 		cmdStr = append(cmdStr, includeArgs...)
 	}
-
+	context.Background()
 	rcmd := rd.Do(ctx, cmdStr...)
 	if rcmd.Err() != nil {
 		slog.Error("redisDb exec failed", "error", rcmd.Err().Error(), "requestId", ctx.RequestId)
