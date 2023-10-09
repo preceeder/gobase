@@ -112,8 +112,13 @@ func initRedis(config map[string]RedisConfig) {
 			MaxIdleConns: v.MaxIdle,
 			MinIdleConns: v.MaxIdle,
 		}
-		Rd[key] = redis.NewClient(redisOpt)
-		Rd[key].AddHook(RKParesHook{})
+		rdb := redis.NewClient(redisOpt)
+		rdb.AddHook(RKParesHook{})
+		cmd := rdb.Ping(context.Background())
+		if cmd.Err() != nil {
+			panic("redis connect fail")
+		}
+		Rd[key] = rdb
 	}
 }
 
@@ -274,7 +279,6 @@ func Do(ctx utils.Context, cmd map[string]any, agrs map[string]any, includeArgs 
 	if len(includeArgs) > 0 {
 		cmdStr = append(cmdStr, includeArgs...)
 	}
-	context.Background()
 	rcmd := rd.Do(ctx, cmdStr...)
 	if rcmd.Err() != nil {
 		slog.Error("redisDb exec failed", "error", rcmd.Err().Error(), "requestId", ctx.RequestId)
