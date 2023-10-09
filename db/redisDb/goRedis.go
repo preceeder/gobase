@@ -241,7 +241,7 @@ func Script(ctx utils.Context, db *redis.Client, script string, keys []string, v
 	if !ns[0] {
 		_, err := rd.ScriptLoad(ctx, script).Result()
 		if err != nil {
-			slog.Error("ScriptLoad error", "error", err.Error(), "requestId", ctx.RequestId)
+			slog.Error("ScriptLoad error", "error", err.Error(), "script", script, "requestId", ctx.RequestId)
 			return nil, err
 		}
 	}
@@ -361,7 +361,7 @@ func (r *RedisLocks) ReleaseLock() {
 	// 删除锁
 	var del = `
 	if redis.call("get",KEYS[1]) == ARGV[1] then
-		return redisDb.call("del",KEYS[1])
+		return redis.call("del",KEYS[1])
 	else
 		return 0
 	end`

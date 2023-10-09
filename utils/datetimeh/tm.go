@@ -59,6 +59,16 @@ func DayNextSecond(zone ...string) int64 {
 	return remainTime
 }
 
+// 今天开始后的时间 秒
+
+func DayLastSecond(zone ...string) int64 {
+	// zone 格林时间 GMT+8
+	cab := timeZoneHandler(zone...)
+	now := cab.Now()
+	remainTime := now.StartOfDay().DiffInSeconds(now)
+	return remainTime
+}
+
 // 本周剩余的时间   周一为开始时间， 周末为结束时间
 
 func WeekNextSecond(zone ...string) int64 {
