@@ -3,6 +3,7 @@ package router
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/mitchellh/mapstructure"
 	"github.com/preceeder/gobase/ginserver"
 	"github.com/preceeder/gobase/utils"
@@ -15,12 +16,24 @@ import (
 	"strings"
 )
 
+var paramsTypeMap = map[string]binding.Binding{
+	"query":  binding.Query,
+	"json":   binding.JSON,
+	"form":   binding.Form,
+	"header": binding.Header,
+}
+
+type ParamsRo struct {
+	Data reflect.Type
+	dty  binding.Binding //  paramsTypeMap 对应的类型
+}
+
 // 路由结构体
 type Route struct {
 	path        string            //url路径
 	httpMethod  string            //http方法 get post
 	Method      reflect.Value     //方法路由
-	Args        []reflect.Type    //参数类型
+	Args        []ParamsRo        //参数类型
 	Middlewares []gin.HandlerFunc // 接口中间件
 }
 
@@ -112,9 +125,20 @@ func Register(controller interface{}) bool {
 			path := dv.Path
 			middlewares := dv.Middlewares
 			//遍历参数
-			params := make([]reflect.Type, 0, v.NumMethod())
-			for j := 0; j < method.Type().NumIn(); j++ {
-				params = append(params, method.Type().In(j))
+			paramsNum := method.Type().NumIn()
+			params := make([]ParamsRo, 0, paramsNum)
+			for j := 1; j < paramsNum; j++ {
+				pp := method.Type().In(j)
+				pp = pp.Elem() // Elem会返回对
+				qtag := pp.Field(0).Tag.Get("gin")
+				var tag binding.Binding
+				if t, ok := paramsTypeMap[qtag]; ok {
+					tag = t
+				} else {
+					panic("params tag deletion")
+				}
+
+				params = append(params, ParamsRo{Data: pp, dty: tag})
 			}
 			route := Route{path: path, Method: method, Args: params, httpMethod: httpMethod, Middlewares: middlewares}
 			Routes = append(Routes, route)
@@ -267,7 +291,25 @@ func match(path string, route Route) gin.HandlerFunc {
 
 		if route.Method.IsValid() {
 			arguments := make([]reflect.Value, 1)
-			arguments[0] = reflect.ValueOf(c) // *gin.Context
+			// 有特殊的参数 需要处理
+			if len(route.Args) > 0 {
+				for i := 0; i < len(route.Args); i++ {
+					replyv := reflect.New(route.Args[i].Data)
+					datan := replyv.Interface()
+					err := c.BindWith(datan, route.Args[i].dty)
+					if err != nil {
+						c.JSON(http.StatusForbidden, gin.H{"errorCode": 10001, "message": "Parameter error"})
+					}
+					arguments = append(arguments, reflect.ValueOf(datan))
+				}
+			}
+			requestId := c.GetString("requestId")
+			ctx := &ginserver.GContext{
+				Context:   c,
+				RequestId: c.GetString("requestId"),
+				UContext:  utils.Context{RequestId: requestId},
+			}
+			arguments[0] = reflect.ValueOf(ctx) // *gin.Context
 
 			res := route.Method.Call(arguments)
 			if res != nil {

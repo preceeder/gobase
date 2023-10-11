@@ -60,7 +60,7 @@ func initSlog(cfg LogConfig) {
 		MaxBackups: cfg.MaxBackups,
 		MaxAge:     cfg.MaxAge,
 	}
-	opt := &slog.HandlerOptions{Level: slog.LevelInfo}
+	opt := &slog.HandlerOptions{Level: slog.LevelInfo, AddSource: true}
 	var writeBuild io.Writer
 	if cfg.StdOut == "1" {
 		writeBuild = io.MultiWriter(os.Stdout, lumberJackInfo)
@@ -72,8 +72,9 @@ func initSlog(cfg LogConfig) {
 		log = slog.New(slog.NewJSONHandler(writeBuild, opt))
 		slog.SetDefault(log)
 	} else if env.GetEnv("env") == "local" {
-		//log = slog.New(slog.NewTextHandler(writeBuild, nil))
-		//slog.SetDefault(log)
+		slog.Default()
+		log = slog.New(slog.NewTextHandler(writeBuild, opt))
+		slog.SetDefault(log)
 
 	}
 }

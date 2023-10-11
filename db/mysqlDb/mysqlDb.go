@@ -121,8 +121,8 @@ func (s Sdb) getTableName(ctx utils.Context, params map[string]any) (tableName s
 		tableName = tn.(string)
 		delete(params, "tableName")
 	} else {
-		slog.Error("mysqlDb tableName not exist", "requestId", ctx.RequestId)
-		panic("mysqlDb tableName not exist")
+		slog.Error("mysqlDb not table name", "requestId", ctx.RequestId, "params", params)
+		panic("not table name")
 	}
 	return
 }

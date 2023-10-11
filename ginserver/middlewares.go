@@ -6,13 +6,9 @@ import (
 	"github.com/preceeder/gobase/utils"
 	"github.com/preceeder/gobase/utils/datetimeh"
 	"log/slog"
-	"net"
 	"net/http"
 	"net/http/httputil"
-	"os"
-	"runtime/debug"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -70,42 +66,15 @@ func GinRecovery(stack bool) gin.HandlerFunc {
 		defer try.CatchException(func(err any, trace string) {
 			// Check for a broken connection, as it is not really a
 			// condition that warrants a panic stack trace.
-			var brokenPipe bool
 			var ResStatus int = 500
 			if he, ok := err.(HttpError); ok {
 				c.JSON(he.GetCode(), he.GetMap())
 				ResStatus = 200
-			} else if ne, ok := err.(*net.OpError); ok {
-				if se, ok := ne.Err.(*os.SyscallError); ok {
-					if strings.Contains(strings.ToLower(se.Error()), "broken pipe") || strings.Contains(strings.ToLower(se.Error()), "connection reset by peer") {
-						brokenPipe = true
-					}
-				}
 			}
 
 			httpRequest, _ := httputil.DumpRequest(c.Request, true)
-			if brokenPipe {
-				slog.Error("",
-					"path", c.Request.URL.Path,
-					"error", err,
-					"requestId", requestId,
 
-					//"request", string(httpRequest),
-				)
-
-				// If the connection is dead, we can't write a status to it.
-				c.Error(err.(error)) // nolint: errcheck
-				c.Abort()
-				return
-			}
-
-			if stack {
-				slog.Error(string(debug.Stack()),
-					"err", err,
-					"requestId", requestId,
-				)
-
-			} else {
+			if ResStatus == 500 {
 				slog.Error("Recovery from panic ",
 					"err", err,
 					"request", httpRequest,

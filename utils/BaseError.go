@@ -7,6 +7,31 @@ Change Activity:
 */
 package utils
 
+import "github.com/bytedance/sonic"
+
+type Error interface {
+	GetData() string
+	Error() string
+}
+
+type AllError struct {
+	Message string
+	Data    any
+}
+
+func (a AllError) GetData() string {
+	data, _ := sonic.MarshalString(a.Data)
+	return data
+}
+
+func (a AllError) Error() string {
+	data, _ := sonic.MarshalString(map[string]string{
+		"data":    a.GetData(),
+		"message": a.Message,
+	})
+	return data
+}
+
 type BaseHttpError struct {
 	ErrorCode int
 	Message   string
