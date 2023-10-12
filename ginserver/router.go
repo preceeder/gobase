@@ -1,11 +1,10 @@
-package router
+package ginserver
 
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/mitchellh/mapstructure"
-	"github.com/preceeder/gobase/ginserver"
 	"github.com/preceeder/gobase/utils"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -32,9 +31,11 @@ type ParamsRo struct {
 type Route struct {
 	path        string            //url路径
 	httpMethod  string            //http方法 get post
+	rv          reflect.Value     // 结构体
 	Method      reflect.Value     //方法路由
 	Args        []ParamsRo        //参数类型
 	Middlewares []gin.HandlerFunc // 接口中间件
+
 }
 
 // 接口路由前缀 配置
@@ -76,7 +77,7 @@ var Routes = []Route{}
 func InitRouter() *gin.Engine {
 	//初始化路由
 	r := gin.New()
-	r.Use(ginserver.Cors(), ginserver.GinLogger(), ginserver.GinRecovery(true))
+	r.Use(Cors(), GinLogger(), GinRecovery(true))
 	//docs.SwaggerInfo.BasePath = "/api"
 	//打开 host:port/swagger/index.html
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
@@ -129,18 +130,35 @@ func Register(controller interface{}) bool {
 			params := make([]ParamsRo, 0, paramsNum)
 			for j := 1; j < paramsNum; j++ {
 				pp := method.Type().In(j)
-				pp = pp.Elem() // Elem会返回对
-				qtag := pp.Field(0).Tag.Get("gin")
-				var tag binding.Binding
-				if t, ok := paramsTypeMap[qtag]; ok {
-					tag = t
-				} else {
-					panic("params tag deletion")
-				}
+				ppt := pp.Elem() // Elem会返回对
+				if pp.Implements(GinParamType) {
+					me, ok := pp.MethodByName("GetType")
 
-				params = append(params, ParamsRo{Data: pp, dty: tag})
+					if !ok {
+						panic("params tag deletion")
+					}
+					fe := me.Func.Call([]reflect.Value{reflect.New(ppt)})
+					fmt.Println(fe)
+					var tag binding.Binding
+					if t, ok := paramsTypeMap[fe[0].Interface().(string)]; ok {
+						tag = t
+					} else {
+						panic("params tag deletion")
+					}
+
+					params = append(params, ParamsRo{Data: pp, dty: tag})
+				}
+				//qtag := pp.Field(0).Tag.Get("gin")
+				//var tag binding.Binding
+				//if t, ok := paramsTypeMap[qtag]; ok {
+				//	tag = t
+				//} else {
+				//	panic("params tag deletion")
+				//}
+				//
+				//params = append(params, ParamsRo{Data: pp, dty: tag})
 			}
-			route := Route{path: path, Method: method, Args: params, httpMethod: httpMethod, Middlewares: middlewares}
+			route := Route{path: path, rv: v, Method: method, Args: params, httpMethod: httpMethod, Middlewares: middlewares}
 			Routes = append(Routes, route)
 		}
 	}
@@ -231,7 +249,8 @@ func PdHandler(apiData ApiRouteConfig, module string) map[string][]PW {
 					funname = k
 				} else {
 					if reflect.TypeOf(vl.FuncName).Kind().String() == "func" {
-						pname := runtime.FuncForPC(reflect.ValueOf(vl.FuncName).Pointer()).Name()
+						dd := reflect.ValueOf(vl.FuncName)
+						pname := runtime.FuncForPC(dd.Pointer()).Name()
 						funname = strings.TrimSuffix(pname, "-fm")
 						fun := strings.Split(funname, ".")
 						funname = fun[len(fun)-1]
@@ -294,22 +313,20 @@ func match(path string, route Route) gin.HandlerFunc {
 			// 有特殊的参数 需要处理
 			if len(route.Args) > 0 {
 				for i := 0; i < len(route.Args); i++ {
-					replyv := reflect.New(route.Args[i].Data)
-					datan := replyv.Interface()
-					err := c.BindWith(datan, route.Args[i].dty)
-					if err != nil {
-						c.JSON(http.StatusForbidden, gin.H{"errorCode": 10001, "message": "Parameter error"})
-					}
-					arguments = append(arguments, reflect.ValueOf(datan))
+					datan := ParamHandler(c, route.Args[i])
+					arguments = append(arguments, datan)
 				}
 			}
 			requestId := c.GetString("requestId")
-			ctx := &ginserver.GContext{
+			//c.BindHeader(DefaultHeader{})
+			ctl := &GContext{
 				Context:   c,
 				RequestId: c.GetString("requestId"),
 				UContext:  utils.Context{RequestId: requestId},
+				UserId:    c.GetString("userId"),
 			}
-			arguments[0] = reflect.ValueOf(ctx) // *gin.Context
+			//arguments[0] = route.rv
+			arguments[0] = reflect.ValueOf(ctl) // *gin.Context
 
 			res := route.Method.Call(arguments)
 			if res != nil {
@@ -318,4 +335,15 @@ func match(path string, route Route) gin.HandlerFunc {
 			}
 		}
 	}
+}
+
+func ParamHandler(c *gin.Context, p ParamsRo) reflect.Value {
+	replyv := reflect.New(p.Data.Elem())
+	datan := replyv.Interface()
+	err := c.MustBindWith(datan, p.dty)
+	if err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"errorCode": 10001, "message": "Parameter error"})
+		c.Abort()
+	}
+	return reflect.ValueOf(datan)
 }

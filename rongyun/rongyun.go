@@ -59,12 +59,9 @@ func InitRongYun(appKey string, appSecret string, withRongCloudURI string) {
 	)
 }
 
-var CustomMsgType = "CU:CUSTOM"
-
 type CustomMsg struct {
-	Class   string
-	User    sdk.MsgUserInfo `json:"user"`
-	Content string
+	User    sdk.MsgUserInfo `json:"user,omitempty"`
+	Content any
 }
 
 func (c CustomMsg) ToString() (string, error) {

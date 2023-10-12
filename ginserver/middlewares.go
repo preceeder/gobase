@@ -69,7 +69,7 @@ func GinRecovery(stack bool) gin.HandlerFunc {
 			var ResStatus int = 500
 			if he, ok := err.(HttpError); ok {
 				c.JSON(he.GetCode(), he.GetMap())
-				ResStatus = 200
+				ResStatus = he.GetCode()
 			}
 
 			httpRequest, _ := httputil.DumpRequest(c.Request, true)

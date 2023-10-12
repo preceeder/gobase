@@ -10,6 +10,7 @@ package ginserver
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/preceeder/gobase/utils"
+	"golang.org/x/net/context"
 	"net/http"
 )
 
@@ -32,6 +33,7 @@ type GContext struct {
 	*gin.Context
 	RequestId string
 	UContext  utils.Context
+	UserId    string // 只有有token的时候才会存在
 }
 
 func (c *GContext) Success(data ...interface{}) {
@@ -48,5 +50,10 @@ func (c *GContext) Fail(code int, errCode int, message string) {
 		"code": errCode,
 		"msg":  message,
 	})
+	c.Abort()
+}
+
+func (c GContext) FailByOld(httpError HttpError) {
+	c.JSON(httpError.GetCode(), httpError.GetMap())
 	c.Abort()
 }
