@@ -24,7 +24,6 @@ func Run(r *gin.Engine, srvName string, addr string, stop func()) {
 			slog.Error(err.Error())
 		} else {
 			slog.Info("启动uri", "uri", addr)
-
 		}
 	}()
 	quit := make(chan os.Signal)

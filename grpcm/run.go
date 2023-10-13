@@ -9,36 +9,35 @@ package grpcm
 
 import (
 	"fmt"
+	"github.com/preceeder/gobase/utils"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"log/slog"
 	"net"
 	"os"
-	"os/signal"
-	"syscall"
 )
 
-func StartSignalLister() chan os.Signal {
-	c := make(chan os.Signal)
-	//监听指定信号 ctrl+c kill
-	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM,
-		syscall.SIGQUIT)
-	return c
-}
-
-func SignalHandler(c chan os.Signal, f func()) {
-	for s := range c {
-		switch s {
-		case syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT:
-			fmt.Println("Program Exit...", s)
-			close(c)
-			f()
-		default:
-			fmt.Println("other signal", s)
-		}
-	}
-}
+//func StartSignalLister() chan os.Signal {
+//	c := make(chan os.Signal)
+//	//监听指定信号 ctrl+c kill
+//	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM,
+//		syscall.SIGQUIT)
+//	return c
+//}
+//
+//func SignalHandler(c chan os.Signal, f func()) {
+//	for s := range c {
+//		switch s {
+//		case syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT:
+//			fmt.Println("Program Exit...", s)
+//			close(c)
+//			f()
+//		default:
+//			slog.Info("other signal", s)
+//		}
+//	}
+//}
 
 type RpcConfig struct {
 	Addr string `json:"addr"`
@@ -79,10 +78,10 @@ func Server(server *grpc.Server) {
 	}
 	slog.Info("开启监听： ", "addr", rcpConfig.Addr)
 	//开启信号监听
-	c := StartSignalLister()
+	c := utils.StartSignalLister()
 
 	//开启信号处理
-	go SignalHandler(c, func() {
+	go utils.SignalHandler(c, func() {
 		//平滑关闭
 		server.GracefulStop()
 	})

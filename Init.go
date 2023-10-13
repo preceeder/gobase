@@ -59,6 +59,15 @@ func WithMysqlOptional(c bool) func(*initOptional, viper.Viper) {
 	}
 }
 
+func WithBinlogOptional(c bool) func(*initOptional, viper.Viper) {
+	return func(il *initOptional, config viper.Viper) {
+		il.withMysql = c
+		if c == true {
+			mysqlDb.InitBinlogWithViperConfig(config)
+		}
+	}
+}
+
 func WithImOptional(c bool) func(*initOptional, viper.Viper) {
 	return func(il *initOptional, config viper.Viper) {
 		il.withIm = c

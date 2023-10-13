@@ -138,7 +138,6 @@ func Register(controller interface{}) bool {
 						panic("params tag deletion")
 					}
 					fe := me.Func.Call([]reflect.Value{reflect.New(ppt)})
-					fmt.Println(fe)
 					var tag binding.Binding
 					if t, ok := paramsTypeMap[fe[0].Interface().(string)]; ok {
 						tag = t

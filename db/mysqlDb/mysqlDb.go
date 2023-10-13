@@ -1,10 +1,3 @@
-/*
-File Name:  mysqlDb.py
-Description:
-Author:      Chenghu
-Date:       2023/8/11 16:20
-Change Activity:
-*/
 package mysqlDb
 
 import (
