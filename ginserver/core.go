@@ -10,7 +10,6 @@ package ginserver
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/preceeder/gobase/utils"
-	"golang.org/x/net/context"
 	"net/http"
 )
 
