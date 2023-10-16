@@ -77,6 +77,7 @@ func GinRecovery(stack bool) gin.HandlerFunc {
 			if ResStatus == 500 {
 				slog.Error("Recovery from panic ",
 					"err", err,
+					"trace", trace,
 					"request", httpRequest,
 					"requestId", requestId,
 				)
