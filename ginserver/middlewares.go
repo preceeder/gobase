@@ -50,6 +50,7 @@ func GinLogger() gin.HandlerFunc {
 			"method", c.Request.Method,
 			"path", path,
 			"requestId", requestId,
+			"userId", c.GetString("userId"),
 			"status", c.Writer.Status(),
 			"query", query,
 			"ip", c.ClientIP(),

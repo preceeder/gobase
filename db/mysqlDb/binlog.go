@@ -92,7 +92,6 @@ func SetBinlogTable(tableName string, action []string, data any, HandlerFun func
 }
 
 func (h *EventHandler) OnRow(e *canal.RowsEvent) error {
-	fmt.Println(e.Action, e.Rows)
 	v, ok := tableData[e.Table.Name]
 	if !ok {
 		return nil
