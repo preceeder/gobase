@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/mitchellh/mapstructure"
 	"github.com/preceeder/gobase/utils"
+	"github.com/preceeder/gobase/utils/reflc"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"log/slog"
@@ -23,8 +24,9 @@ var paramsTypeMap = map[string]binding.Binding{
 }
 
 type ParamsRo struct {
-	Data reflect.Type
-	dty  binding.Binding //  paramsTypeMap 对应的类型
+	Data        reflect.Type
+	dty         binding.Binding          //  paramsTypeMap 对应的类型
+	DefaultData map[string]reflect.Value // data 的默认对象
 }
 
 // 路由结构体
@@ -144,8 +146,22 @@ func Register(controller interface{}) bool {
 					} else {
 						panic("params tag deletion")
 					}
-
-					params = append(params, ParamsRo{Data: pp, dty: tag})
+					// 需要处理一下 默认值
+					var DefaultData = map[string]reflect.Value{}
+					for znfd := 0; znfd < ppt.NumField(); znfd++ {
+						pf := ppt.Field(znfd)
+						defaultd := pf.Tag.Get("default")
+						if defaultd != "" {
+							value, err := reflc.DUnmarshal(pf.Type, defaultd)
+							if err != nil {
+								panic(err)
+							}
+							ptd := reflect.New(pf.Type).Elem()
+							ptd.Set(value)
+							DefaultData[pf.Name] = ptd
+						}
+					}
+					params = append(params, ParamsRo{Data: pp, dty: tag, DefaultData: DefaultData})
 				}
 				//qtag := pp.Field(0).Tag.Get("gin")
 				//var tag binding.Binding
@@ -344,5 +360,21 @@ func ParamHandler(c *gin.Context, p ParamsRo) reflect.Value {
 		c.JSON(http.StatusForbidden, gin.H{"errorCode": 10001, "message": "Parameter error"})
 		c.Abort()
 	}
-	return reflect.ValueOf(datan)
+	data := reflect.ValueOf(datan)
+
+	// 有设置默认值的  需要判断一下
+	if len(p.DefaultData) > 0 {
+		dtemp := data.Elem()
+		dtempt := dtemp.Type()
+		for i := 0; i < dtempt.NumField(); i++ {
+			name := dtempt.Field(i).Name
+			fd := dtemp.Field(i)
+			if fd.IsZero() {
+				if v, ok := p.DefaultData[name]; ok {
+					fd.Set(v)
+				}
+			}
+		}
+	}
+	return data
 }

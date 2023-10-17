@@ -118,7 +118,6 @@ func (h *EventHandler) OnRow(e *canal.RowsEvent) error {
 			targetData[i] = table
 		}
 	}
-	fmt.Println(targetData[0], len(targetData))
 	// 保存数据 操作 由用户自己决定
 	go v.HandlerFun(e.Action, targetData[0], targetData[1:]...)
 
@@ -152,7 +151,6 @@ func BinLogRun(config ...BinlogConfig) {
 		cfg.IncludeTableRegex = append(cfg.IncludeTableRegex, fmt.Sprintf("^%s\\.%s$", binconfig.Db, v.TableName))
 	}
 	slog.Info("binglog config", "config", cfg)
-	//cfg.Logger = nil
 	c, err := canal.NewCanal(cfg)
 
 	if err != nil {

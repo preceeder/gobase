@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/preceeder/gobase/utils"
 	"net/http"
+	"strconv"
 )
 
 type HandlerFunc func(c *GContext)
@@ -33,6 +34,23 @@ type GContext struct {
 	RequestId string
 	UContext  utils.Context
 	UserId    string // 只有有token的时候才会存在
+}
+
+func (c GContext) QueryInt(key string) (int, error) {
+	kd, err := strconv.Atoi(c.Query(key))
+	return kd, err
+}
+
+func (c GContext) QueryPageSize() (int, int) {
+	page, err := strconv.Atoi(c.DefaultQuery("page", "0"))
+	if err != nil {
+		page = 0
+	}
+	size, err := strconv.Atoi(c.DefaultQuery("size", "20"))
+	if err != nil {
+		size = 20
+	}
+	return page, size
 }
 
 func (c *GContext) Success(data ...interface{}) {

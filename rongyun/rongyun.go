@@ -65,7 +65,7 @@ type CustomMsg struct {
 }
 
 func (c CustomMsg) ToString() (string, error) {
-	msg, err := sonic.MarshalString(c)
+	msg, err := sonic.ConfigFastest.MarshalToString(c)
 	if err != nil {
 		return "", err
 	}
