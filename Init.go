@@ -8,6 +8,7 @@ Change Activity:
 package gobase
 
 import (
+	"github.com/preceeder/gobase/aliyun/oss"
 	"github.com/preceeder/gobase/aliyun/push"
 	"github.com/preceeder/gobase/config"
 	"github.com/preceeder/gobase/db/mysqlDb"
@@ -29,6 +30,7 @@ type initOptional struct {
 	withJigou  bool
 	withRpc    bool
 	withShumei bool
+	withAliOss bool
 }
 
 func WithGinOptional(c bool) func(*initOptional, viper.Viper) {
@@ -109,6 +111,15 @@ func WithShumeiOptional(c bool) func(*initOptional, viper.Viper) {
 		il.withShumei = c
 		if c == true {
 			shumei.InitShumeiWithViperConfig(config)
+		}
+	}
+}
+
+func WithAliOssOptional(c bool) func(optional *initOptional, viper2 viper.Viper) {
+	return func(il *initOptional, config viper.Viper) {
+		il.withAliOss = c
+		if c == true {
+			oss.InitAliOssWithViper(config)
 		}
 	}
 }

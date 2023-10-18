@@ -49,7 +49,7 @@ func Direct(t reflect.Type) reflect.Type {
 	return t
 }
 
-// 传入指定的 类型， 我对应的字符串
+// 传入指定的 类型， 我对应的字符串    使用场景 已知一个数据的 类型， 和一个已知的 字符串  且可以传化为那类型， 返回对应类型的reflect.value
 func DUnmarshal(p reflect.Type, value string) (reflect.Value, error) {
 	//去除前后的连续空格
 	p = Direct(p)

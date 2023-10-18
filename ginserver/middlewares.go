@@ -75,14 +75,13 @@ func GinRecovery(stack bool) gin.HandlerFunc {
 
 			httpRequest, _ := httputil.DumpRequest(c.Request, true)
 
-			if ResStatus == 500 {
-				slog.Error("Recovery from panic ",
-					"err", err,
-					"trace", trace,
-					"request", httpRequest,
-					"requestId", requestId,
-				)
-			}
+			slog.Error("Recovery from panic ",
+				"err", err,
+				"trace", trace,
+				"request", httpRequest,
+				"requestId", requestId,
+			)
+
 			c.AbortWithStatus(ResStatus)
 
 		})

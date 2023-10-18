@@ -11,6 +11,8 @@ import (
 	"bytes"
 	"fmt"
 	"runtime"
+	"slices"
+	"strings"
 )
 
 func CatchException(handle func(err any, e string)) {
@@ -21,16 +23,44 @@ func CatchException(handle func(err any, e string)) {
 	}
 }
 
+var JumpPackage = []string{"try.CatchException", "gin.(*Context).Next", "gin.(*Engine).handleHTTPRequest",
+	"gin.(*Engine).ServeHTTP", "runtime.goexit", "http.(*conn).serve", "http.serverHandler.ServeHTTP",
+	"runtime.gopanic", "runtime.panicmem", "runtime.sigpanic"}
+
 // 打印堆栈信息
 func printStackTrace(err any) string {
 	buf := new(bytes.Buffer)
-	fmt.Fprintf(buf, "%v\n", err)
-	for i := 1; ; i++ {
+	fmt.Fprintf(buf, "%v --> ", err)
+	isu := false
+	for i := 1; true; i++ {
 		pc, file, line, ok := runtime.Caller(i)
 		if !ok {
+			fmt.Fprintf(buf, "%s:%d", file, line)
 			break
+		} else {
+			prevFunc := runtime.FuncForPC(pc).Name()
+			if !isu {
+				if strings.Contains(prevFunc, "try.CatchException") {
+					isu = true
+				}
+			} else {
+				names := strings.Split(prevFunc, "/")
+				if !slices.Contains(JumpPackage, names[len(names)-1]) {
+					fmt.Fprintf(buf, "%s:%d --> ", file, line)
+				}
+
+			}
 		}
-		fmt.Fprintf(buf, "%s:%d (0x%x)\n", file, line, pc)
+
 	}
 	return buf.String()
+}
+
+func ttttt() {
+	defer CatchException(func(err any, e string) {
+		if err != nil {
+			fmt.Println(e)
+		}
+	})
+	panic("ss")
 }
