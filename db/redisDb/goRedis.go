@@ -204,14 +204,18 @@ func ExecScript(context2 utils.Context, sc map[string]any, keys map[string]strin
 
 	sk, err := getScriptKv(context2, sc, "keys", keys, fData)
 	if err != nil {
+		slog.Error("redis script error", "error", err.Error(), "requestId", context2.RequestId)
+
 		panic(utils.BaseRunTimeError{ErrorCode: 500, Message: "redis error1"})
 	}
 	argvs, err := getScriptKv(context2, sc, "argv", values, fData)
 	if err != nil {
+		slog.Error("redis script error", "error", err.Error(), "requestId", context2.RequestId)
 		panic(utils.BaseRunTimeError{ErrorCode: 500, Message: "redis error2"})
 	}
 	res, err := Script(context2, rd, sc["script"].(string), sk, argvs)
 	if err != nil {
+		slog.Error("redis script error", "error", err.Error(), "requestId", context2.RequestId)
 		panic(utils.BaseRunTimeError{ErrorCode: 500, Message: "redis error3"})
 	}
 	return res, nil

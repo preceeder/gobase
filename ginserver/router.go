@@ -134,6 +134,7 @@ func Register(controller interface{}) bool {
 				pp := method.Type().In(j)
 				ppt := pp.Elem() // Elem会返回对
 				if pp.Implements(GinParamType) {
+					// 参数结构体中 必须是 匿名的导入 ginserver.BodyJson 等
 					me, ok := pp.MethodByName("GetType")
 
 					if !ok {
