@@ -326,14 +326,14 @@ func match(path string, route Route) gin.HandlerFunc {
 
 		if route.Method.IsValid() {
 			arguments := make([]reflect.Value, 1)
+			requestId := c.GetString("requestId")
 			// 有特殊的参数 需要处理
 			if len(route.Args) > 0 {
 				for i := 0; i < len(route.Args); i++ {
-					datan := ParamHandler(c, route.Args[i])
+					datan := ParamHandler(c, requestId, route.Args[i])
 					arguments = append(arguments, datan)
 				}
 			}
-			requestId := c.GetString("requestId")
 			//c.BindHeader(DefaultHeader{})
 			ctl := &GContext{
 				Context:   c,
@@ -353,12 +353,13 @@ func match(path string, route Route) gin.HandlerFunc {
 	}
 }
 
-func ParamHandler(c *gin.Context, p ParamsRo) reflect.Value {
+func ParamHandler(c *gin.Context, requestId string, p ParamsRo) reflect.Value {
 	replyv := reflect.New(p.Data.Elem())
 	datan := replyv.Interface()
 	err := c.MustBindWith(datan, p.dty)
 	if err != nil {
 		c.Abort()
+		slog.Error("获取用户参数失败", "error", err.Error(), "requestId", requestId)
 		panic(utils.BaseHttpError{Code: 403, ErrorCode: int(CodeParameterError), Message: CodeMessage[CodeParameterError]})
 	}
 	data := reflect.ValueOf(datan)
