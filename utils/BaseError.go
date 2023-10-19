@@ -33,6 +33,7 @@ func (a AllError) Error() string {
 }
 
 type BaseHttpError struct {
+	Code      int
 	ErrorCode int
 	Message   string
 }
@@ -43,6 +44,13 @@ func (h BaseHttpError) GetMap() map[string]any {
 
 func (h BaseHttpError) Error() string {
 	return h.Message
+}
+
+func (h BaseHttpError) GetCode() int {
+	if h.Code == 0 {
+		return 403
+	}
+	return h.Code
 }
 
 type BaseRunTimeError struct {

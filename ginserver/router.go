@@ -358,8 +358,8 @@ func ParamHandler(c *gin.Context, p ParamsRo) reflect.Value {
 	datan := replyv.Interface()
 	err := c.MustBindWith(datan, p.dty)
 	if err != nil {
-		c.JSON(http.StatusForbidden, gin.H{"errorCode": 10001, "message": "Parameter error"})
 		c.Abort()
+		panic(utils.BaseHttpError{Code: 403, ErrorCode: int(CodeParameterError), Message: CodeMessage[CodeParameterError]})
 	}
 	data := reflect.ValueOf(datan)
 
