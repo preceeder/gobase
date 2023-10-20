@@ -360,7 +360,7 @@ func ParamHandler(c *gin.Context, requestId string, p ParamsRo) reflect.Value {
 	if err != nil {
 		c.Abort()
 		slog.Error("获取用户参数失败", "error", err.Error(), "requestId", requestId)
-		panic(BaseHttpError{Code: StatusCodeCommonErr, ErrorCode: config.CodeParameterError, Message: CodeMessage[CodeParameterError]})
+		panic(BaseHttpError{Code: StatusCodeCommonErr, ErrorCode: CodeParameterError, Message: CodeMessage[CodeParameterError]})
 	}
 	data := reflect.ValueOf(datan)
 
