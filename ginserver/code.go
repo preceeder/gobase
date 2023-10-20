@@ -15,6 +15,7 @@ const (
 	CodeLoginError        ErrorCode = 10003 // 登录失败
 	CodeLoinForbid        ErrorCode = 10004 // 禁止登录
 	CodeProhibit          ErrorCode = 10005 // 禁止操作 operation
+	CodeTokenError        ErrorCode = 1001  // token验证失败
 )
 
 var CodeMessage = map[ErrorCode]string{
@@ -25,3 +26,12 @@ var CodeMessage = map[ErrorCode]string{
 	CodeLoinForbid:        "Prohibit login",
 	CodeProhibit:          "Prohibit operation",
 }
+
+type StatusCode int
+
+const (
+	StatusCodeSystemError StatusCode = 500 // 系统错误 代码
+	StatusCodeTokenError  StatusCode = 401 // token 验证失败代码
+	StatusCodeCommonErr   StatusCode = 403 // 通用错误代码
+	StatusCodeSuccess     StatusCode = 200 // 成功代码
+)

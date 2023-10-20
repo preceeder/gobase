@@ -5,7 +5,7 @@ Author:      Chenghu
 Date:       2023/8/21 14:42
 Change Activity:
 */
-package gobase
+package ginserver
 
 import (
 	"fmt"

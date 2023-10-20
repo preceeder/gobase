@@ -1,4 +1,4 @@
-package gobase
+package ginserver
 
 import (
 	"encoding/base64"
@@ -37,7 +37,7 @@ func TokenGenerateUsingHs256(mclaim map[string]string) (string, error) {
 func TokenParseHs256(tokenSecrete string) (*CustomClaims, error) {
 	defer func() {
 		if err := recover(); err != nil {
-			panic(utils.BaseHttpError{Code: 401, ErrorCode: 401, Message: "toekn error"})
+			panic(BaseHttpError{Code: StatusCodeTokenError, ErrorCode: CodeTokenError, Message: "toekn error"})
 		}
 	}()
 	tokenbyte, _ := base64.StdEncoding.DecodeString(tokenSecrete)
@@ -47,16 +47,16 @@ func TokenParseHs256(tokenSecrete string) (*CustomClaims, error) {
 	})
 
 	if err != nil {
-		return nil, utils.BaseHttpError{Code: 401, ErrorCode: 401, Message: "toekn error 1"}
+		return nil, BaseHttpError{Code: StatusCodeTokenError, ErrorCode: CodeTokenError, Message: "toekn error 1"}
 	}
 
 	if !token.Valid {
-		return nil, utils.BaseHttpError{Code: 401, ErrorCode: 401, Message: "toekn error 2"}
+		return nil, BaseHttpError{Code: StatusCodeTokenError, ErrorCode: CodeTokenError, Message: "toekn error 2"}
 	}
 
 	claims, ok := token.Claims.(*CustomClaims)
 	if !ok {
-		return nil, utils.BaseHttpError{Code: 401, ErrorCode: 401, Message: "toekn error 3"}
+		return nil, BaseHttpError{Code: StatusCodeTokenError, ErrorCode: CodeTokenError, Message: "toekn error 3"}
 	}
 	return claims, nil
 }
