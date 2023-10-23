@@ -9,59 +9,13 @@ package mysqlDb
 
 import (
 	"database/sql"
+	"fmt"
+	"github.com/bytedance/sonic"
 	"github.com/jmoiron/sqlx"
 	"github.com/preceeder/gobase/utils"
-	"github.com/spf13/viper"
 	"reflect"
 	"testing"
 )
-
-func TestInitMysqlWithStruct(t *testing.T) {
-	type args struct {
-		config map[string]MysqlConfig
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			InitMysqlWithStruct(tt.args.config)
-		})
-	}
-}
-
-func TestInitMysqlWithViperConfig(t *testing.T) {
-	type args struct {
-		config viper.Viper
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			InitMysqlWithViperConfig(tt.args.config)
-		})
-	}
-}
-
-func TestMysqlPoolClose(t *testing.T) {
-	tests := []struct {
-		name string
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			MysqlPoolClose()
-		})
-	}
-}
 
 func TestSdb_Execute(t *testing.T) {
 	type fields struct {
@@ -118,37 +72,6 @@ func TestSdb_Fetch(t *testing.T) {
 				DefaultDb: tt.fields.DefaultDb,
 			}
 			s.Fetch(utils.Context{}, tt.args.sqlStr, tt.args.params, tt.args.row)
-		})
-	}
-}
-
-func TestSdb_Get(t *testing.T) {
-	type fields struct {
-		Db        Mdb
-		DefaultDb string
-	}
-	type args struct {
-		dest  interface{}
-		query string
-		args  []interface{}
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := Sdb{
-				Db:        tt.fields.Db,
-				DefaultDb: tt.fields.DefaultDb,
-			}
-			if err := s.Get(tt.args.dest, tt.args.query, tt.args.args...); (err != nil) != tt.wantErr {
-				t.Errorf("Get() error = %v, wantErr %v", err, tt.wantErr)
-			}
 		})
 	}
 }
@@ -246,29 +169,48 @@ func TestSdb_InsertUpdate(t *testing.T) {
 }
 
 func TestSdb_Select(t *testing.T) {
-	type fields struct {
-		Db        Mdb
-		DefaultDb string
+
+	InitMysqlWithStruct(map[string]MysqlConfig{
+		"default": MysqlConfig{
+			Host:        "127.0.0.1",
+			Port:        "13306",
+			Password:    "pinky@1111",
+			User:        "pinky",
+			Db:          "pinky",
+			MaxOpenCons: 20,
+			MaxIdleCons: 5,
+		},
+	})
+	type Users struct {
+		UserIds           string     `db:"userId"`
+		Nicks             NullString `db:"nick"`
+		LastLoginDateTime NullString `db:"lastLoginDateTime"`
 	}
+	ser := Users{}
+
 	type args struct {
 		sqlStr string
 		params map[string]any
 		row    any
 	}
+
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
+		name string
+		args args
 	}{
 		// TODO: Add test cases.
+		{name: "", args: args{
+			sqlStr: "select nick, userId,lastLoginDateTime from t_user where id = 1018",
+			params: nil,
+			row:    &ser,
+		}},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := Sdb{
-				Db:        tt.fields.Db,
-				DefaultDb: tt.fields.DefaultDb,
-			}
-			s.Select(utils.Context{}, tt.args.sqlStr, tt.args.params, tt.args.row)
+			MysqlDb.Select(utils.Context{}, tt.args.sqlStr, tt.args.params, tt.args.row)
+			fmt.Printf("%#v\n", tt.args.row)
+			fmt.Println(sonic.MarshalString(tt.args.row))
 		})
 	}
 }
@@ -327,165 +269,6 @@ func TestSdb_Update(t *testing.T) {
 			}
 			if got := s.Update(utils.Context{}, tt.args.params, tt.args.tx...); got != tt.want {
 				t.Errorf("Update() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestSdb_defaultDb(t *testing.T) {
-	type fields struct {
-		Db        Mdb
-		DefaultDb string
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   string
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := Sdb{
-				Db:        tt.fields.Db,
-				DefaultDb: tt.fields.DefaultDb,
-			}
-			if got := s.defaultDb(); got != tt.want {
-				t.Errorf("defaultDb() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestSdb_getDb(t *testing.T) {
-	type fields struct {
-		Db        Mdb
-		DefaultDb string
-	}
-	type args struct {
-		params map[string]any
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		wantDb string
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := Sdb{
-				Db:        tt.fields.Db,
-				DefaultDb: tt.fields.DefaultDb,
-			}
-			if gotDb := s.getDb(tt.args.params); gotDb != tt.wantDb {
-				t.Errorf("getDb() = %v, want %v", gotDb, tt.wantDb)
-			}
-		})
-	}
-}
-
-func TestSdb_getTableName(t *testing.T) {
-	type fields struct {
-		Db        Mdb
-		DefaultDb string
-	}
-	type args struct {
-		params map[string]any
-	}
-	tests := []struct {
-		name          string
-		fields        fields
-		args          args
-		wantTableName string
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := Sdb{
-				Db:        tt.fields.Db,
-				DefaultDb: tt.fields.DefaultDb,
-			}
-			if gotTableName := s.getTableName(utils.Context{}, tt.args.params); gotTableName != tt.wantTableName {
-				t.Errorf("getTableName() = %v, want %v", gotTableName, tt.wantTableName)
-			}
-		})
-	}
-}
-
-func TestSdb_sqlPares(t *testing.T) {
-	type fields struct {
-		Db        Mdb
-		DefaultDb string
-	}
-	type args struct {
-		osql   string
-		params map[string]any
-	}
-	tests := []struct {
-		name     string
-		fields   fields
-		args     args
-		wantSql  string
-		wantArgs []any
-		wantDb   string
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := Sdb{
-				Db:        tt.fields.Db,
-				DefaultDb: tt.fields.DefaultDb,
-			}
-			gotSql, gotArgs, gotDb := s.sqlPares(utils.Context{}, tt.args.osql, tt.args.params)
-			if gotSql != tt.wantSql {
-				t.Errorf("sqlPares() gotSql = %v, want %v", gotSql, tt.wantSql)
-			}
-			if !reflect.DeepEqual(gotArgs, tt.wantArgs) {
-				t.Errorf("sqlPares() gotArgs = %v, want %v", gotArgs, tt.wantArgs)
-			}
-			if gotDb != tt.wantDb {
-				t.Errorf("sqlPares() gotDb = %v, want %v", gotDb, tt.wantDb)
-			}
-		})
-	}
-}
-
-func Test_initMySQL(t *testing.T) {
-	type args struct {
-		config map[string]MysqlConfig
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			initMySQL(tt.args.config)
-		})
-	}
-}
-
-func Test_readMysqlConfig(t *testing.T) {
-	type args struct {
-		config viper.Viper
-	}
-	tests := []struct {
-		name string
-		args args
-		want map[string]MysqlConfig
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := readMysqlConfig(tt.args.config); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("readMysqlConfig() = %v, want %v", got, tt.want)
 			}
 		})
 	}

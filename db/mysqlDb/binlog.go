@@ -51,22 +51,24 @@ var BConfig BinlogConfig
 
 // 使用 viper读取的配置初始化
 func InitBinlogWithViperConfig(config viper.Viper) {
-	BConfig = readBinlogConfig(config)
+	//BConfig = readBinlogConfig(config)
+	utils.ReadViperConfig(config, "binlog", &BConfig)
 }
-func readBinlogConfig(config viper.Viper) BinlogConfig {
-	binlog := config.Sub("binlog")
-	if binlog == nil {
-		fmt.Printf("binlog config is nil")
-		os.Exit(1)
-	}
-	var subbinlog BinlogConfig
-	err := binlog.Unmarshal(&subbinlog)
-	if err != nil {
-		fmt.Printf("subbinlog config read error: " + err.Error())
-		os.Exit(1)
-	}
-	return subbinlog
-}
+
+//func readBinlogConfig(config viper.Viper) BinlogConfig {
+//	binlog := config.Sub("binlog")
+//	if binlog == nil {
+//		fmt.Printf("binlog config is nil")
+//		os.Exit(1)
+//	}
+//	var subbinlog BinlogConfig
+//	err := binlog.Unmarshal(&subbinlog)
+//	if err != nil {
+//		fmt.Printf("subbinlog config read error: " + err.Error())
+//		os.Exit(1)
+//	}
+//	return subbinlog
+//}
 
 type TableData struct {
 	TableName  string

@@ -8,7 +8,6 @@ Change Activity:
 package shumei
 
 import (
-	"fmt"
 	"github.com/bytedance/sonic"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/go-resty/resty/v2"
@@ -16,7 +15,6 @@ import (
 	"github.com/spf13/viper"
 	"log/slog"
 	"net/url"
-	"os"
 	"strings"
 	"time"
 )
@@ -40,14 +38,14 @@ type ShumeiUrl struct {
 }
 type ShumeiConfig struct {
 	AppId       string    `json:"appid"`
-	accessKey   string    `json:"accessKey"`
+	AccessKey   string    `json:"accessKey"`
 	CdnUrl      string    `json:"cdnUrl"`      // cdn的url
 	TokenPrefix string    `json:"tokenPrefix"` // 用户token的前缀
 	ShumeiUrl   ShumeiUrl `json:"shumeiUrl"`
 }
 
 func initShumei(config ShumeiConfig) {
-	client, err := NewShuMei(config.AppId, config.accessKey, OptionWithTokenPrefix(config.TokenPrefix), OptionWithBaseUrl(config.CdnUrl))
+	client, err := NewShuMei(config.AppId, config.AccessKey, OptionWithTokenPrefix(config.TokenPrefix), OptionWithBaseUrl(config.CdnUrl))
 	if err != nil {
 		slog.Error("数美初始化失败", "error", err.Error())
 		panic("数美初始化失败")
@@ -57,23 +55,10 @@ func initShumei(config ShumeiConfig) {
 
 // 使用 viper读取的配置初始化
 func InitShumeiWithViperConfig(config viper.Viper) {
-	shumeisConfig := readRedisConfig(config)
+	//shumeisConfig := readRedisConfig(config)
+	shumeisConfig := ShumeiConfig{}
+	utils.ReadViperConfig(config, "shumei", &shumeisConfig)
 	initShumei(shumeisConfig)
-}
-
-func readRedisConfig(v viper.Viper) (rs ShumeiConfig) {
-	shumei := v.Sub("shumei")
-	if shumei == nil {
-		fmt.Printf("shumei config is nil")
-		os.Exit(1)
-	}
-	rs = ShumeiConfig{}
-	err := shumei.Unmarshal(&rs)
-	if err != nil {
-		fmt.Printf("shumei config read error: " + err.Error())
-		os.Exit(1)
-	}
-	return
 }
 
 type ShuMei struct {

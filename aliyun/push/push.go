@@ -8,7 +8,6 @@ Change Activity:
 package push
 
 import (
-	"fmt"
 	number "github.com/alibabacloud-go/darabonba-number/client"
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
 	push20160801 "github.com/alibabacloud-go/push-20160801/v2/client"
@@ -17,7 +16,6 @@ import (
 	"github.com/preceeder/gobase/utils"
 	"github.com/spf13/viper"
 	"log/slog"
-	"os"
 	"strings"
 )
 
@@ -25,9 +23,10 @@ var AliPushClient *push20160801.Client
 var AliPushConfig AliPush
 
 func InitWithViper(config viper.Viper) {
-	aliConfig := readAliPushConfig(config)
-	AliPushConfig = aliConfig
-	_, err := CreateClient(&aliConfig.KeyId, &aliConfig.Secret, &aliConfig.EndPoint, &aliConfig.RegionId)
+	//aliConfig := readAliPushConfig(config)
+	utils.ReadViperConfig(config, "ali_push", &AliPushConfig)
+	_, err := CreateClient(&(AliPushConfig.KeyId), &(AliPushConfig.Secret),
+		&(AliPushConfig.EndPoint), &(AliPushConfig.RegionId))
 	if err != nil {
 		slog.Error("阿里云push创建失败", "error", err.Error())
 		panic("阿里云push创建失败：" + err.Error())
@@ -42,21 +41,6 @@ type AliPush struct {
 	AppKeyAndroid string `json:"appKeyAndroid"`
 	AppKeyIos     string `json:"appKeyIos"`
 	Env           string `json:"env"`
-}
-
-func readAliPushConfig(v viper.Viper) (ali AliPush) {
-	aliPush := v.Sub("ali_push")
-	if aliPush == nil {
-		fmt.Printf("ali_push config is nil")
-		os.Exit(1)
-	}
-	ali = AliPush{}
-	err := aliPush.Unmarshal(&ali)
-	if err != nil {
-		fmt.Printf("ali_push config read error: " + err.Error())
-		os.Exit(1)
-	}
-	return
 }
 
 /**

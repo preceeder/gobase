@@ -29,7 +29,6 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
 	"log/slog"
-	"os"
 	"reflect"
 	"strconv"
 	"time"
@@ -73,24 +72,26 @@ var redisObj = map[string]RedisConfig{
 
 // 使用 viper读取的配置初始化
 func InitRedisWithViperConfig(config viper.Viper) {
-	redisConfig := readRedisConfig(config)
+	redisConfig := map[string]RedisConfig{}
+	utils.ReadViperConfig(config, "redis", &redisConfig)
+	//redisConfig := readRedisConfig(config)
 	initRedis(redisConfig)
 }
 
-func readRedisConfig(v viper.Viper) (rs map[string]RedisConfig) {
-	redisDb := v.Sub("redis")
-	if redisDb == nil {
-		fmt.Printf("redisDb config is nil")
-		os.Exit(1)
-	}
-	rs = make(map[string]RedisConfig)
-	err := redisDb.Unmarshal(&rs)
-	if err != nil {
-		fmt.Printf("redisDb config read error: " + err.Error())
-		os.Exit(1)
-	}
-	return
-}
+//func readRedisConfig(v viper.Viper) (rs map[string]RedisConfig) {
+//	redisDb := v.Sub("redis")
+//	if redisDb == nil {
+//		fmt.Printf("redisDb config is nil")
+//		os.Exit(1)
+//	}
+//	rs = make(map[string]RedisConfig)
+//	err := redisDb.Unmarshal(&rs)
+//	if err != nil {
+//		fmt.Printf("redisDb config read error: " + err.Error())
+//		os.Exit(1)
+//	}
+//	return
+//}
 
 // 使用传入的 redisDb 配置文件初始化
 

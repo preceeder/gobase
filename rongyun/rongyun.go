@@ -8,12 +8,11 @@ Change Activity:
 package rongyun
 
 import (
-	"fmt"
 	"github.com/bytedance/sonic"
 	"github.com/duke-git/lancet/v2/cryptor"
+	"github.com/preceeder/gobase/utils"
 	"github.com/rongcloud/server-sdk-go/v3/sdk"
 	"github.com/spf13/viper"
-	"os"
 	"strings"
 )
 
@@ -27,26 +26,27 @@ type rongyunConfig struct {
 }
 
 func InitWithViper(config viper.Viper) {
-	ry := readRongYunConfig(config)
-	rcConfig = ry
-	InitRongYun(ry.AppKey, ry.AppSecret, ry.WithRongCloudURI)
+	//ry := readRongYunConfig(config)
+	utils.ReadViperConfig(config, "rongyun", &rcConfig)
+	//rcConfig = ry
+	InitRongYun(rcConfig.AppKey, rcConfig.AppSecret, rcConfig.WithRongCloudURI)
 }
 
-func readRongYunConfig(v viper.Viper) (ry rongyunConfig) {
-	rongyun := v.Sub("rongyun")
-	if rongyun == nil {
-		fmt.Printf("rongyun config is nil")
-		os.Exit(1)
-	}
-	ry = rongyunConfig{}
-	err := rongyun.Unmarshal(&ry)
-	if err != nil {
-
-		fmt.Printf("rongyun config read error: " + err.Error())
-		os.Exit(1)
-	}
-	return
-}
+//func readRongYunConfig(v viper.Viper) (ry rongyunConfig) {
+//	rongyun := v.Sub("rongyun")
+//	if rongyun == nil {
+//		fmt.Printf("rongyun config is nil")
+//		os.Exit(1)
+//	}
+//	ry = rongyunConfig{}
+//	err := rongyun.Unmarshal(&ry)
+//	if err != nil {
+//
+//		fmt.Printf("rongyun config read error: " + err.Error())
+//		os.Exit(1)
+//	}
+//	return
+//}
 
 func InitRongYun(appKey string, appSecret string, withRongCloudURI string) {
 	// 方法1： 创建对象时设置

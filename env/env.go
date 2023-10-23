@@ -8,8 +8,8 @@ Change Activity:
 package env
 
 import (
-	"fmt"
 	"github.com/duke-git/lancet/v2/convertor"
+	"github.com/preceeder/gobase/utils"
 	"github.com/spf13/viper"
 	"log/slog"
 	"os"
@@ -22,7 +22,9 @@ type Environment struct {
 }
 
 func InitEnv(config viper.Viper) {
-	ev := ReadEnvConfig(config)
+	//ev := ReadEnvConfig(config)
+	ev := Environment{}
+	utils.ReadViperConfig(config, "env", &ev)
 	es, err := convertor.StructToMap(ev)
 	if err != nil {
 		panic("init env error: " + err.Error())
@@ -35,20 +37,20 @@ func InitEnv(config viper.Viper) {
 	}
 }
 
-func ReadEnvConfig(v viper.Viper) Environment {
-	env := v.Sub("env")
-	if env == nil {
-		fmt.Printf("env config is nil")
-		os.Exit(1)
-	}
-	ev := Environment{}
-	err := env.Unmarshal(&ev)
-	if err != nil {
-		fmt.Printf("env config is nil")
-		os.Exit(1)
-	}
-	return ev
-}
+//func ReadEnvConfig(v viper.Viper) Environment {
+//	env := v.Sub("env")
+//	if env == nil {
+//		fmt.Printf("env config is nil")
+//		os.Exit(1)
+//	}
+//	ev := Environment{}
+//	err := env.Unmarshal(&ev)
+//	if err != nil {
+//		fmt.Printf("env config is nil")
+//		os.Exit(1)
+//	}
+//	return ev
+//}
 
 func GetEnv(k string) string {
 	e, ok := os.LookupEnv(k)

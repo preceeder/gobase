@@ -64,7 +64,8 @@ func redaRpcConfig(c viper.Viper) (rc *RpcConfig) {
 var rcpConfig *RpcConfig
 
 func InitRpc(config viper.Viper) {
-	rcpConfig = redaRpcConfig(config)
+	//rcpConfig = redaRpcConfig(config)
+	utils.ReadViperConfig(config, "rpc", rcpConfig)
 }
 
 func Server(server *grpc.Server) {

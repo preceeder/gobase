@@ -405,23 +405,3 @@ func Test_generateSignature(t *testing.T) {
 		})
 	}
 }
-
-func Test_readJigouConfig(t *testing.T) {
-	type args struct {
-		v viper.Viper
-	}
-	tests := []struct {
-		name   string
-		args   args
-		wantJg jigouConfig
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if gotJg := readJigouConfig(tt.args.v); !reflect.DeepEqual(gotJg, tt.wantJg) {
-				t.Errorf("readJigouConfig() = %v, want %v", gotJg, tt.wantJg)
-			}
-		})
-	}
-}

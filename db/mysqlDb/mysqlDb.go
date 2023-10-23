@@ -10,7 +10,6 @@ import (
 	"github.com/preceeder/gobase/utils"
 	"github.com/spf13/viper"
 	"log/slog"
-	"os"
 	"strings"
 )
 
@@ -28,23 +27,27 @@ type MysqlConfig struct {
 
 // 使用 viper读取的配置初始化
 func InitMysqlWithViperConfig(config viper.Viper) {
-	redisConfig := readMysqlConfig(config)
+	//redisConfig := readMysqlConfig(config)
+	redisConfig := map[string]MysqlConfig{}
+	utils.ReadViperConfig(config, "mysql", &redisConfig)
+
 	initMySQL(redisConfig)
 }
-func readMysqlConfig(config viper.Viper) map[string]MysqlConfig {
-	mysql := config.Sub("mysql")
-	if mysql == nil {
-		fmt.Printf("mysqlDb config is nil")
-		os.Exit(1)
-	}
-	var subMysql map[string]MysqlConfig
-	err := mysql.Unmarshal(&subMysql)
-	if err != nil {
-		fmt.Printf("mysqlDb config read error: " + err.Error())
-		os.Exit(1)
-	}
-	return subMysql
-}
+
+//func readMysqlConfig(config viper.Viper) map[string]MysqlConfig {
+//	mysql := config.Sub("mysql")
+//	if mysql == nil {
+//		fmt.Printf("mysqlDb config is nil")
+//		os.Exit(1)
+//	}
+//	var subMysql map[string]MysqlConfig
+//	err := mysql.Unmarshal(&subMysql)
+//	if err != nil {
+//		fmt.Printf("mysqlDb config read error: " + err.Error())
+//		os.Exit(1)
+//	}
+//	return subMysql
+//}
 
 func InitMysqlWithStruct(config map[string]MysqlConfig) {
 	initMySQL(config)

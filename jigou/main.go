@@ -20,7 +20,6 @@ import (
 	"github.com/zegoim/zego_server_assistant/token/go/src/token04"
 	"log/slog"
 	"net/url"
-	"os"
 	"slices"
 	"strconv"
 	"strings"
@@ -48,24 +47,10 @@ type jigouConfig struct {
 	CallBackSecret string `json:"callbackSecret"`
 }
 
-func readJigouConfig(v viper.Viper) (jg jigouConfig) {
-	jigou := v.Sub("jigou")
-	if jigou == nil {
-		fmt.Printf("jigou config is nil")
-		os.Exit(1)
-	}
-	jg = jigouConfig{}
-	err := jigou.Unmarshal(&jg)
-	if err != nil {
-		fmt.Printf("jigou config read error: " + err.Error())
-		os.Exit(1)
-	}
-	return
-}
-
 func InitWithViper(config viper.Viper) {
-	jigouConfig := readJigouConfig(config)
-	InitJiGou(jigouConfig.AppId, jigouConfig.ServerSecret)
+	//jigouConfig := readJigouConfig(config)
+	utils.ReadViperConfig(config, "jigou", &JiGouConfig)
+	InitJiGou(JiGouConfig.AppId, JiGouConfig.ServerSecret)
 }
 
 func InitJiGou(appid string, serverSecret string) {

@@ -1,13 +1,14 @@
 package logs
 
 import (
-	"fmt"
 	"github.com/preceeder/gobase/env"
+	"github.com/preceeder/gobase/utils"
 	"github.com/spf13/viper"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"io"
 	"log/slog"
 	"os"
+	"strings"
 )
 
 type LogConfig struct {
@@ -27,27 +28,29 @@ type LogConfig struct {
 //}
 
 func InitLogWithViper(config viper.Viper) {
-	logConfig := ReadLogConfig(config)
+	//logConfig := ReadLogConfig(config)
+	logConfig := LogConfig{}
+	utils.ReadViperConfig(config, "log", &logConfig)
 	initSlog(logConfig)
 }
 
-func ReadLogConfig(config viper.Viper) LogConfig {
-	LCf := config.Sub("log")
-	if LCf == nil {
-		fmt.Printf("log config is nil")
-		os.Exit(1)
-	}
-	//从配置中读取日志配置，初始化日志
-	return LogConfig{
-		DebugFileName: LCf.GetString("DebugFileName"),
-		InfoFileName:  LCf.GetString("InfoFileName"),
-		WarnFileName:  LCf.GetString("WarnFileName"),
-		MaxSize:       LCf.GetInt("MaxSize"),
-		MaxAge:        LCf.GetInt("MaxAge"),
-		MaxBackups:    LCf.GetInt("MaxBackups"),
-		StdOut:        LCf.GetString("StdOut"),
-	}
-}
+//func ReadLogConfig(config viper.Viper) LogConfig {
+//	LCf := config.Sub("log")
+//	if LCf == nil {
+//		fmt.Printf("log config is nil")
+//		os.Exit(1)
+//	}
+//	//从配置中读取日志配置，初始化日志
+//	return LogConfig{
+//		DebugFileName: LCf.GetString("DebugFileName"),
+//		InfoFileName:  LCf.GetString("InfoFileName"),
+//		WarnFileName:  LCf.GetString("WarnFileName"),
+//		MaxSize:       LCf.GetInt("MaxSize"),
+//		MaxAge:        LCf.GetInt("MaxAge"),
+//		MaxBackups:    LCf.GetInt("MaxBackups"),
+//		StdOut:        LCf.GetString("StdOut"),
+//	}
+//}
 
 func InitLogWithStruct(cfg LogConfig) {
 	initSlog(cfg)
@@ -60,7 +63,16 @@ func initSlog(cfg LogConfig) {
 		MaxBackups: cfg.MaxBackups,
 		MaxAge:     cfg.MaxAge,
 	}
-	opt := &slog.HandlerOptions{Level: slog.LevelInfo, AddSource: true}
+
+	opt := &slog.HandlerOptions{Level: slog.LevelInfo, AddSource: true, ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+		if a.Key == slog.SourceKey {
+			d := a.Value.Any().(*slog.Source)
+			if strings.HasSuffix(d.Function, "ginserver.InitRouter.GinLogger.func2") {
+				a.Value = slog.Value{}
+			}
+		}
+		return a
+	}}
 	var writeBuild io.Writer
 	if cfg.StdOut == "1" {
 		writeBuild = io.MultiWriter(os.Stdout, lumberJackInfo)

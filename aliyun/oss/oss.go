@@ -7,8 +7,8 @@
 package oss
 
 import (
-	"fmt"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
+	"github.com/preceeder/gobase/utils"
 	"github.com/spf13/viper"
 	"log/slog"
 	"os"
@@ -19,8 +19,8 @@ var OssClient *oss.Client
 var OssBucket *oss.Bucket // 使用的时候都是用这个
 
 func InitAliOssWithViper(config viper.Viper) {
-	aliConfig := readAliOssConfig(config)
-	AliOssConfig = aliConfig
+	//aliConfig := readAliOssConfig(config)
+	utils.ReadViperConfig(config, "ali_oss", &AliOssConfig)
 	CreateClient(AliOssConfig.EndPoint, AliOssConfig.AccessKey, AliOssConfig.AccessSecret)
 }
 
@@ -33,20 +33,20 @@ type AliOss struct {
 	Cdn          string `json:"cdn"`
 }
 
-func readAliOssConfig(v viper.Viper) (ali AliOss) {
-	alioss := v.Sub("ali_oss")
-	if alioss == nil {
-		fmt.Printf("ali oss config is nil")
-		os.Exit(1)
-	}
-	ali = AliOss{}
-	err := alioss.Unmarshal(&ali)
-	if err != nil {
-		fmt.Printf("ali oss config read error: " + err.Error())
-		os.Exit(1)
-	}
-	return
-}
+//func readAliOssConfig(v viper.Viper) (ali AliOss) {
+//	alioss := v.Sub("ali_oss")
+//	if alioss == nil {
+//		fmt.Printf("ali oss config is nil")
+//		os.Exit(1)
+//	}
+//	ali = AliOss{}
+//	err := alioss.Unmarshal(&ali)
+//	if err != nil {
+//		fmt.Printf("ali oss config read error: " + err.Error())
+//		os.Exit(1)
+//	}
+//	return
+//}
 
 func CreateClient(endpoint, accessKey, accessSecret string) {
 	client, err := oss.New(endpoint, accessKey, accessSecret, oss.Region(AliOssConfig.Region))
