@@ -15,12 +15,12 @@ import (
 /** 将viper 配置读渠道 target 结构体中
  */
 func ReadViperConfig(v viper.Viper, key string, target any) {
-	redisDb := v.Sub(key)
-	if redisDb == nil {
+	keyConfig := v.Sub(key)
+	if keyConfig == nil {
 		fmt.Printf("%s config is nil\n", key)
 		os.Exit(1)
 	}
-	err := redisDb.Unmarshal(&target)
+	err := keyConfig.Unmarshal(target)
 	if err != nil {
 		fmt.Printf("%s config read error: %s \n", key, err.Error())
 		os.Exit(1)
