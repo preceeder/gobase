@@ -4,7 +4,7 @@
 //    Date:       2023/10/23 13:37
 //    Change Activity:
 
-package nsq_f
+package consumer
 
 import (
 	"github.com/nsqio/go-nsq"

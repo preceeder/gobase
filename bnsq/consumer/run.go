@@ -4,7 +4,7 @@
 //    Date:       2023/10/23 13:38
 //    Change Activity:
 
-package nsq_f
+package consumer
 
 import (
 	"github.com/preceeder/gobase/utils"
@@ -20,9 +20,9 @@ type NsqConfig struct {
 	MaxInFlight  int      `json:"maxInFlight"`
 }
 
-func InitConfig(config viper.Viper) {
+func InitNsqConsumerConfig(config viper.Viper) {
 	nsqConfig = &NsqConfig{}
-	utils.ReadViperConfig(config, "nsq", nsqConfig)
+	utils.ReadViperConfig(config, "nsq-consumer", nsqConfig)
 }
 
 // 启动服务
@@ -52,23 +52,16 @@ func (s *Server) Run() {
 // 关闭服务
 func (s *Server) Close() {
 	if s.nsq != nil {
-		s.Close()
+		s.nsq.Close()
 	}
 }
 
-func Start(cfg ...*NsqConfig) {
+func Start(cfg ...*NsqConfig) *Server {
 	// 启动服务
 	if len(cfg) > 0 {
 		nsqConfig = cfg[0]
 	}
 	srv := NewServer(nsqConfig)
 	srv.Run()
-	//开启信号监听
-	c := utils.StartSignalLister()
-	//开启信号处理
-	go utils.SignalHandler(c, func() {
-		//平滑关闭
-		srv.Close()
-	})
-
+	return srv
 }

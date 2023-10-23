@@ -4,19 +4,34 @@
 //    Date:       2023/10/20 16:18
 //    Change Activity:
 
-package procder
+package producer
 
 import (
 	"fmt"
 	"github.com/nsqio/go-nsq"
 	"github.com/preceeder/gobase/utils"
+	"github.com/spf13/viper"
 	"log/slog"
 	"os"
 )
 
 var NsqProduct = map[string]*nsq.Producer{}
 
-func InitNsqProducer() {
+type NsqProducerConfig struct {
+	Name string `json:"name" default:"default"`
+	Addr string `json:"nsqdAddr" default:"127.0.0.1:8009"`
+}
+
+func InitNsqProducer(config viper.Viper) {
+	nsqConfig := []NsqProducerConfig{}
+	utils.ReadViperConfig(config, "nsq-producer", &nsqConfig)
+	for _, nsqc := range nsqConfig {
+		err := NewProduct(nsqc.Addr, nsqc.Name)
+		if err != nil {
+			slog.Error("InitNsqProducer error ", "error", err.Error())
+			panic("InitNsqProducer error: " + err.Error())
+		}
+	}
 	//开启信号监听
 	signl := utils.StartSignalLister()
 
