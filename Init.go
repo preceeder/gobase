@@ -1,5 +1,5 @@
 /*
-File Name:  Init.py
+File Name:  Init.go
 Description:   这里一定要初始化
 Author:      Chenghu
 Date:       2023/8/21 13:35

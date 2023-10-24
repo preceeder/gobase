@@ -1,5 +1,5 @@
 /*
-File Name:  mysqlType.py
+File Name:  mysqlType.go
 Description:
 Author:      Chenghu
 Date:       2023/8/16 11:16

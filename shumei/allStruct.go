@@ -1,5 +1,5 @@
 /*
-File Name:  allStruct.py
+File Name:  allStruct.go
 Description:
 Author:      Chenghu
 Date:       2023/8/23 16:29

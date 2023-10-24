@@ -1,5 +1,5 @@
 /*
-File Name:  responseStruct.py
+File Name:  responseStruct.go
 Description:
 Author:      Chenghu
 Date:       2023/8/22 17:14
