@@ -51,11 +51,11 @@ func initShumei(config ShumeiConfig) {
 		panic("数美初始化失败")
 	}
 	ShumeiClient = client
+	ShumeiClient.ShumeiUrl = config.ShumeiUrl
 }
 
 // 使用 viper读取的配置初始化
 func InitShumeiWithViperConfig(config viper.Viper) {
-	//shumeisConfig := readRedisConfig(config)
 	shumeisConfig := ShumeiConfig{}
 	utils.ReadViperConfig(config, "shumei", &shumeisConfig)
 	initShumei(shumeisConfig)
