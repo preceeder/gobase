@@ -7,10 +7,13 @@
 package consumer
 
 import (
+	"github.com/duke-git/lancet/v2/slice"
 	"github.com/nsqio/go-nsq"
 	"golang.org/x/net/context"
 	"time"
 )
+
+var logLevel = []string{"debug", "info", "warring", "error"}
 
 type SubRouter struct {
 	Topic   string
@@ -34,6 +37,9 @@ type NsqConsumer struct {
 	lookupdPollInterval time.Duration
 	// nsq consumer config
 	maxInFlight int
+
+	// log level
+	logLevel int
 	// 注册的 consumers 对象
 	consumers []*nsq.Consumer
 }
@@ -42,11 +48,16 @@ type NsqConsumer struct {
 type MqHandlerFunc func(ctx context.Context, msg *nsq.Message) error
 
 // 初始化 Nsq consumer 对象
-func NewNsqConsumer(lookupds []string, pollInterval time.Duration, maxInFlight int) *NsqConsumer {
+func NewNsqConsumer(lookupds []string, pollInterval time.Duration, maxInFlight int, loglevel string) *NsqConsumer {
+	var logl = 2
+	if slice.Contain(logLevel, loglevel) {
+		logl = slice.IndexOf(logLevel, loglevel)
+	}
 	return &NsqConsumer{
 		lookupds:            lookupds,
 		lookupdPollInterval: pollInterval,
 		maxInFlight:         maxInFlight,
+		logLevel:            logl,
 	}
 }
 
@@ -80,6 +91,7 @@ func (n *NsqConsumer) Start() error {
 	}
 
 	for _, h := range n.consumers {
+		h.SetLoggerLevel(nsq.LogLevel(n.logLevel))
 		if err := h.ConnectToNSQLookupds(n.lookupds); err != nil {
 			return err
 		}
