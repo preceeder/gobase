@@ -1,5 +1,5 @@
 /*
-File Name:  main_test.go.py
+File Name:  main_test.go.go
 Description:
 Author:      Chenghu
 Date:       2023/8/23 14:02
@@ -229,15 +229,24 @@ func TestShuMei_Text1(t *testing.T) {
 		want bool
 	}{
 		// TODO: Add test cases.
-		{name: "ss", args: args{p: ShumeiText{Text: "", UserId: ""}}},
+		{name: "ss", args: args{p: ShumeiText{Text: "不是吧", UserId: "2222"}}},
 	}
-	s, _ := NewShuMei("", "", OptionWithTokenPrefix(""), OptionWithBaseUrl(""))
+
+	initShumei(ShumeiConfig{
+		AppId:       "",
+		AccessKey:   "",
+		CdnUrl:      "https://",
+		TokenPrefix: "test_",
+		ShumeiUrl: ShumeiUrl{
+			TextUrl: "http://api-text-xjp.fengkongcloud.com/text/v4",
+		},
+	})
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := s.Text(utils.Context{}, tt.args.p)
+			got := ShumeiClient.Text(utils.Context{}, tt.args.p)
 			fmt.Println(got)
-			if got := s.Text(utils.Context{}, tt.args.p); got != tt.want {
+			if got != tt.want {
 				t.Errorf("Text() = %v, want %v", got, tt.want)
 			}
 		})

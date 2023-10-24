@@ -147,7 +147,7 @@ func WithNsqProducerOptional(c bool) func(optional *initOptional, viper2 viper.V
 	}
 }
 
-func Init(viperPath string, viperConfigName string, optional ...func(*initOptional, viper.Viper)) {
+func Init(viperPath string, viperConfigName string, optional ...func(*initOptional, viper.Viper)) viper.Viper {
 	cf := config.InitConfig(viperPath, viperConfigName)
 	//初始化环境变量
 	env.InitEnv(*cf.Viper)
@@ -159,5 +159,5 @@ func Init(viperPath string, viperConfigName string, optional ...func(*initOption
 		v(&il, *cf.Viper)
 	}
 
-	return
+	return *cf.Viper
 }
