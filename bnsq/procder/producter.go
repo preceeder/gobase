@@ -15,7 +15,7 @@ import (
 	"os"
 )
 
-var NsqProduct = map[string]*nsq.Producer{}
+var NsqProducer = map[string]*nsq.Producer{}
 
 type NsqProducerConfig struct {
 	Name string `json:"name" default:"default"`
@@ -38,7 +38,7 @@ func InitNsqProducer(config viper.Viper) {
 	//开启信号处理
 	go utils.SignalHandler(signl, func() {
 		//平滑关闭
-		for _, v := range NsqProduct {
+		for _, v := range NsqProducer {
 			slog.Info("stop nsq producer", "addr", v.String())
 			v.Stop()
 		}
@@ -57,7 +57,7 @@ func NewProduct(nsqdAddr, name string) error {
 	if err != nil {
 		fmt.Printf("nsq producer ping error: %v\n", err.Error())
 	}
-	NsqProduct[name] = producer
+	NsqProducer[name] = producer
 	slog.Info("开启 nsq producer", "addr", producer.String())
 	return nil
 }

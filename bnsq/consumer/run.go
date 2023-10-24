@@ -21,7 +21,7 @@ type NsqConfig struct {
 }
 
 func InitNsqConsumerConfig(config viper.Viper) {
-	nsqConfig = &NsqConfig{}
+	nsqConfig = &NsqConfig{NsqLookupd: make([]string, 0)}
 	utils.ReadViperConfig(config, "nsq-consumer", nsqConfig)
 }
 
@@ -43,7 +43,6 @@ func NewServer(cfg ...*NsqConfig) *Server {
 func (s *Server) Run() {
 	// 启动 nsq consumber    10, 2
 	s.nsq = NewNsqConsumer(s.cfg.NsqLookupd, time.Duration(s.cfg.PollInterval)*time.Second, s.cfg.MaxInFlight)
-
 	if err := s.nsq.Start(); err != nil {
 		panic(err)
 	}
