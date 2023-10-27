@@ -60,7 +60,8 @@ func InitRongYun(appKey string, appSecret string, withRongCloudURI string) {
 }
 
 type CustomMsg struct {
-	User    sdk.MsgUserInfo `json:"user,omitempty"`
+	Type    string          `json:"type,omitempty"`
+	User    sdk.MsgUserInfo `json:"-"`
 	Content any             `json:"content"`
 }
 
