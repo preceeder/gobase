@@ -469,6 +469,7 @@ func (s ShuMei) HandlerCallBackUrl(urlStr string) string {
 // 音频流检查
 func (s ShuMei) AudioStream(ctx utils.Context, p ShumeiAsyncAudioStream) (bool, *AudioStreamResponse) {
 	turl := s.ShumeiUrl.VoiceStreamUrl //"http://api-audiostream-sh.fengkongcloud.com/audiostream/v4"
+
 	data := map[string]interface{}{
 		"tokenId":    s.tokenHandler(p.UserId),
 		"lang":       s.voiceLangeHandler(p.Lang),
@@ -555,13 +556,14 @@ func (s ShuMei) VideoStream(ctx utils.Context, p ShumeiAsyncVideoStream) (bool, 
 	}
 
 	payload := map[string]interface{}{
-		"accessKey":   s.AccessKey,
-		"appId":       s.AppId,
-		"eventId":     p.EventId,
-		"imgType":     p.VideoType,
-		"audioType":   p.VoiceType,
-		"imgCallback": s.HandlerCallBackUrl(p.ImgCallback),
-		"data":        data,
+		"accessKey":     s.AccessKey,
+		"appId":         s.AppId,
+		"eventId":       p.EventId,
+		"imgType":       p.VideoType,
+		"audioType":     p.VoiceType,
+		"imgCallback":   s.HandlerCallBackUrl(p.ImgCallback),
+		"audioCallback": s.HandlerCallBackUrl(p.AudioCallback),
+		"data":          data,
 	}
 
 	res := &AudioStreamResponse{}

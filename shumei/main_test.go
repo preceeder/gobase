@@ -49,7 +49,7 @@ func TestShuMei_AsyncImage1(t *testing.T) {
 				DefaultVideoType: tt.fields.DefaultVideoType,
 				TokenPrefix:      tt.fields.TokenPrefix,
 				HttpClient:       tt.fields.HttpClient,
-				BaseUrl:          tt.fields.BaseUrl,
+				CdnUrl:           tt.fields.BaseUrl,
 				StreamType:       tt.fields.StreamType,
 			}
 			if got := s.AsyncImage(utils.Context{}, tt.args.p); got != tt.want {
@@ -94,7 +94,7 @@ func TestShuMei_AsyncVideoFile(t *testing.T) {
 				DefaultVideoType: tt.fields.DefaultVideoType,
 				TokenPrefix:      tt.fields.TokenPrefix,
 				HttpClient:       tt.fields.HttpClient,
-				BaseUrl:          tt.fields.BaseUrl,
+				CdnUrl:           tt.fields.BaseUrl,
 				StreamType:       tt.fields.StreamType,
 			}
 			if got := s.AsyncVideoFile(utils.Context{}, tt.args.p); got != tt.want {
@@ -139,7 +139,7 @@ func TestShuMei_AsyncVoiceFile(t *testing.T) {
 				DefaultVideoType: tt.fields.DefaultVideoType,
 				TokenPrefix:      tt.fields.TokenPrefix,
 				HttpClient:       tt.fields.HttpClient,
-				BaseUrl:          tt.fields.BaseUrl,
+				CdnUrl:           tt.fields.BaseUrl,
 				StreamType:       tt.fields.StreamType,
 			}
 			if got := s.AsyncVoiceFile(utils.Context{}, tt.args.p); got != tt.want {
@@ -184,7 +184,7 @@ func TestShuMei_AudioStream(t *testing.T) {
 				DefaultVideoType: tt.fields.DefaultVideoType,
 				TokenPrefix:      tt.fields.TokenPrefix,
 				HttpClient:       tt.fields.HttpClient,
-				BaseUrl:          tt.fields.BaseUrl,
+				CdnUrl:           tt.fields.BaseUrl,
 				StreamType:       tt.fields.StreamType,
 			}
 			if got, _ := s.AudioStream(utils.Context{}, tt.args.p); got != tt.want {
@@ -207,7 +207,7 @@ func TestShuMei_Image(t *testing.T) {
 		// TODO: Add test cases.
 		{name: "ss", args: args{p: ShumeiImage{ImageUrl: "", UserId: ""}}},
 	}
-	s, _ := NewShuMei("", "", OptionWithTokenPrefix("test_"), OptionWithBaseUrl(""))
+	s, _ := NewShuMei("", "", OptionWithTokenPrefix("test_"), OptionWithCdnUrl(""))
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -288,7 +288,7 @@ func TestShuMei_VideoStream(t *testing.T) {
 				DefaultVideoType: tt.fields.DefaultVideoType,
 				TokenPrefix:      tt.fields.TokenPrefix,
 				HttpClient:       tt.fields.HttpClient,
-				BaseUrl:          tt.fields.BaseUrl,
+				CdnUrl:           tt.fields.BaseUrl,
 				StreamType:       tt.fields.StreamType,
 			}
 			if got, _ := s.VideoStream(utils.Context{}, tt.args.p); got != tt.want {
@@ -333,7 +333,7 @@ func TestShuMei_VoiceFile(t *testing.T) {
 				DefaultVideoType: tt.fields.DefaultVideoType,
 				TokenPrefix:      tt.fields.TokenPrefix,
 				HttpClient:       tt.fields.HttpClient,
-				BaseUrl:          tt.fields.BaseUrl,
+				CdnUrl:           tt.fields.BaseUrl,
 				StreamType:       tt.fields.StreamType,
 			}
 			if got := s.VoiceFile(utils.Context{}, tt.args.p); got != tt.want {
