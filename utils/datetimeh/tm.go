@@ -91,6 +91,16 @@ func MouthNextSexond(zone ...string) int64 {
 	return remainTime
 }
 
+// 获取当前小时的剩余时间
+func HourNextSecond(zone ...string) int64 {
+	cab := timeZoneHandler(zone...)
+	remainTime := cab.Now().DiffInSeconds(cab.EndOfHour())
+	if remainTime <= 1 {
+		return 1
+	}
+	return remainTime
+}
+
 // 获取本月的剩余时间
 func ConvertTimestampToDateTime(timestamp int64, zone ...string) carbon.Carbon {
 	cab := timeZoneHandler(zone...)
