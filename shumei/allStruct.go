@@ -1,5 +1,5 @@
 /*
-File Name:  allStruct.py
+File Name:  allStruct.go
 Description:
 Author:      Chenghu
 Date:       2023/8/23 16:29
@@ -85,6 +85,7 @@ type ShumeiAsyncVideoStream struct {
 	VoiceType      string
 	EventId        string
 	ImgCallback    string // 视频流只检查 画面
+	AudioCallback  string // 音频画面
 	//Callback       string
 	ReturnFinishInfo int
 	TestEnv          bool

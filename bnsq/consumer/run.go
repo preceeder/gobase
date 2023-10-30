@@ -4,7 +4,7 @@
 //    Date:       2023/10/23 13:38
 //    Change Activity:
 
-package nsq_f
+package consumer
 
 import (
 	"github.com/preceeder/gobase/utils"
@@ -18,11 +18,12 @@ type NsqConfig struct {
 	NsqLookupd   []string `json:"lookupds"`
 	PollInterval int64    `json:"pollInterval"`
 	MaxInFlight  int      `json:"maxInFlight"`
+	LogLevel     string   `json:"logLevel"`
 }
 
-func InitConfig(config viper.Viper) {
-	nsqConfig = &NsqConfig{}
-	utils.ReadViperConfig(config, "nsq", nsqConfig)
+func InitNsqConsumerConfig(config viper.Viper) {
+	nsqConfig = &NsqConfig{NsqLookupd: make([]string, 0)}
+	utils.ReadViperConfig(config, "nsq-consumer", nsqConfig)
 }
 
 // 启动服务
@@ -42,8 +43,7 @@ func NewServer(cfg ...*NsqConfig) *Server {
 
 func (s *Server) Run() {
 	// 启动 nsq consumber    10, 2
-	s.nsq = NewNsqConsumer(s.cfg.NsqLookupd, time.Duration(s.cfg.PollInterval)*time.Second, s.cfg.MaxInFlight)
-
+	s.nsq = NewNsqConsumer(s.cfg.NsqLookupd, time.Duration(s.cfg.PollInterval)*time.Second, s.cfg.MaxInFlight, s.cfg.LogLevel)
 	if err := s.nsq.Start(); err != nil {
 		panic(err)
 	}
@@ -52,23 +52,16 @@ func (s *Server) Run() {
 // 关闭服务
 func (s *Server) Close() {
 	if s.nsq != nil {
-		s.Close()
+		s.nsq.Close()
 	}
 }
 
-func Start(cfg ...*NsqConfig) {
+func Start(cfg ...*NsqConfig) *Server {
 	// 启动服务
 	if len(cfg) > 0 {
 		nsqConfig = cfg[0]
 	}
 	srv := NewServer(nsqConfig)
 	srv.Run()
-	//开启信号监听
-	c := utils.StartSignalLister()
-	//开启信号处理
-	go utils.SignalHandler(c, func() {
-		//平滑关闭
-		srv.Close()
-	})
-
+	return srv
 }

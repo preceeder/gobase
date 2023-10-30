@@ -1,5 +1,5 @@
 /*
-File Name:  Init.py
+File Name:  Init.go
 Description:   这里一定要初始化
 Author:      Chenghu
 Date:       2023/8/21 13:35
@@ -10,6 +10,8 @@ package gobase
 import (
 	"github.com/preceeder/gobase/aliyun/oss"
 	"github.com/preceeder/gobase/aliyun/push"
+	nsq_consumer "github.com/preceeder/gobase/bnsq/consumer"
+	nsq_producer "github.com/preceeder/gobase/bnsq/procder"
 	"github.com/preceeder/gobase/config"
 	"github.com/preceeder/gobase/db/mysqlDb"
 	"github.com/preceeder/gobase/db/redisDb"
@@ -20,17 +22,20 @@ import (
 	"github.com/preceeder/gobase/logs"
 	"github.com/preceeder/gobase/rongyun"
 	"github.com/preceeder/gobase/shumei"
+
 	"github.com/spf13/viper"
 )
 
 type initOptional struct {
-	withRedis  bool
-	withMysql  bool
-	withIm     bool
-	withJigou  bool
-	withRpc    bool
-	withShumei bool
-	withAliOss bool
+	withRedis       bool
+	withMysql       bool
+	withIm          bool
+	withJigou       bool
+	withRpc         bool
+	withShumei      bool
+	withAliOss      bool
+	withNsqConsumer bool
+	withNsqProducer bool
 }
 
 func WithGinOptional(c bool) func(*initOptional, viper.Viper) {
@@ -124,7 +129,25 @@ func WithAliOssOptional(c bool) func(optional *initOptional, viper2 viper.Viper)
 	}
 }
 
-func Init(viperPath string, viperConfigName string, optional ...func(*initOptional, viper.Viper)) {
+func WithNsqConsumerOptional(c bool) func(optional *initOptional, viper2 viper.Viper) {
+	return func(il *initOptional, config viper.Viper) {
+		il.withNsqConsumer = c
+		if c == true {
+			nsq_consumer.InitNsqConsumerConfig(config)
+		}
+	}
+}
+
+func WithNsqProducerOptional(c bool) func(optional *initOptional, viper2 viper.Viper) {
+	return func(il *initOptional, config viper.Viper) {
+		il.withNsqProducer = c
+		if c == true {
+			nsq_producer.InitNsqProducer(config)
+		}
+	}
+}
+
+func Init(viperPath string, viperConfigName string, optional ...func(*initOptional, viper.Viper)) viper.Viper {
 	cf := config.InitConfig(viperPath, viperConfigName)
 	//初始化环境变量
 	env.InitEnv(*cf.Viper)
@@ -136,5 +159,5 @@ func Init(viperPath string, viperConfigName string, optional ...func(*initOption
 		v(&il, *cf.Viper)
 	}
 
-	return
+	return *cf.Viper
 }

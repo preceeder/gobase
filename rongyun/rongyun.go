@@ -1,5 +1,5 @@
 /*
-File Name:  rongyun.py
+File Name:  rongyun.go
 Description:
 Author:      Chenghu
 Date:       2023/8/23 21:44
@@ -60,8 +60,9 @@ func InitRongYun(appKey string, appSecret string, withRongCloudURI string) {
 }
 
 type CustomMsg struct {
-	User    sdk.MsgUserInfo `json:"user,omitempty"`
-	Content any
+	Type    string          `json:"type,omitempty"`
+	User    sdk.MsgUserInfo `json:"-"`
+	Content any             `json:"content"`
 }
 
 func (c CustomMsg) ToString() (string, error) {

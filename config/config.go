@@ -20,7 +20,7 @@ type Config struct {
 func InitConfig(params ...string) *Config {
 	//params[0]:  path    配置文件的路径
 	log.Printf("run config")
-	ConfigObj := &Config{Viper: viper.New()}
+	ConfigObj = &Config{Viper: viper.New()}
 	workDir := ""
 	if params != nil && params[0] != "" {
 		workDir = params[0]

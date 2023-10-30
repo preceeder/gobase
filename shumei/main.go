@@ -1,5 +1,5 @@
 /*
-File Name:  main.py
+File Name:  main.go
 Description:
 Author:      Chenghu
 Date:       2023/8/23 11:25
@@ -37,25 +37,29 @@ type ShumeiUrl struct {
 	VideoStreamUrl      string `json:"videoStreamUrl"`      // 视频流检查url
 }
 type ShumeiConfig struct {
-	AppId       string    `json:"appid"`
-	AccessKey   string    `json:"accessKey"`
-	CdnUrl      string    `json:"cdnUrl"`      // cdn的url
-	TokenPrefix string    `json:"tokenPrefix"` // 用户token的前缀
-	ShumeiUrl   ShumeiUrl `json:"shumeiUrl"`
+	AppId          string    `json:"appid"`
+	AccessKey      string    `json:"accessKey"`
+	CdnUrl         string    `json:"cdnUrl"`         // cdn的url
+	TokenPrefix    string    `json:"tokenPrefix"`    // 用户token的前缀
+	CallBackDomain string    `json:"callBackDomain"` // 回调的 url
+	ShumeiUrl      ShumeiUrl `json:"shumeiUrl"`
 }
 
 func initShumei(config ShumeiConfig) {
-	client, err := NewShuMei(config.AppId, config.AccessKey, OptionWithTokenPrefix(config.TokenPrefix), OptionWithBaseUrl(config.CdnUrl))
+	client, err := NewShuMei(config.AppId, config.AccessKey,
+		OptionWithTokenPrefix(config.TokenPrefix),
+		OptionWithCdnUrl(config.CdnUrl),
+		OptionWithCallBackDomain(config.CallBackDomain))
 	if err != nil {
 		slog.Error("数美初始化失败", "error", err.Error())
 		panic("数美初始化失败")
 	}
 	ShumeiClient = client
+	ShumeiClient.ShumeiUrl = config.ShumeiUrl
 }
 
 // 使用 viper读取的配置初始化
 func InitShumeiWithViperConfig(config viper.Viper) {
-	//shumeisConfig := readRedisConfig(config)
 	shumeisConfig := ShumeiConfig{}
 	utils.ReadViperConfig(config, "shumei", &shumeisConfig)
 	initShumei(shumeisConfig)
@@ -70,7 +74,8 @@ type ShuMei struct {
 	DefaultVideoType string // 默认值 POLITY_EROTIC_ADVERT
 	TokenPrefix      string // 用户id的统一前缀
 	HttpClient       *resty.Client
-	BaseUrl          string
+	CdnUrl           string    // 资源的 url 最后不加 /
+	CallBackDomain   string    // 回调域名  url 最后不加 /
 	StreamType       string    // 目前默认值 ZEGO
 	ShumeiUrl        ShumeiUrl // 数美接口的urls
 }
@@ -115,13 +120,19 @@ func OptionWithTokenPrefix(t string) func(*ShuMei) error {
 	}
 }
 
-func OptionWithBaseUrl(t string) func(mei *ShuMei) error {
+func OptionWithCdnUrl(t string) func(mei *ShuMei) error {
 	return func(s *ShuMei) error {
-		s.BaseUrl = t
+		s.CdnUrl = t
 		return nil
 	}
 }
 
+func OptionWithCallBackDomain(t string) func(mei *ShuMei) error {
+	return func(s *ShuMei) error {
+		s.CallBackDomain = t
+		return nil
+	}
+}
 func OptionWithUrl(t ShumeiUrl) func(mei *ShuMei) error {
 	return func(s *ShuMei) error {
 		s.ShumeiUrl = t
@@ -164,7 +175,7 @@ func (s ShuMei) Send(url string, body any, response any) (map[string]any, error)
 
 func (s ShuMei) urlHandler(imageUrl string) string {
 	if !(strings.HasPrefix(imageUrl, "http://") || strings.HasPrefix(imageUrl, "https://")) {
-		imageUrl, _ = url.JoinPath(s.BaseUrl, imageUrl)
+		imageUrl, _ = url.JoinPath(s.CdnUrl, imageUrl)
 	}
 	return imageUrl
 }
@@ -447,9 +458,18 @@ func (s ShuMei) AsyncVideoFile(ctx utils.Context, p ShumeiAsyncVideoFile) bool {
 	return true
 }
 
+// 回调路径处理
+func (s ShuMei) HandlerCallBackUrl(urlStr string) string {
+	if !(strings.HasPrefix(urlStr, "http://") || strings.HasPrefix(urlStr, "https://")) {
+		urlStr, _ = url.JoinPath(s.CallBackDomain, urlStr)
+	}
+	return urlStr
+}
+
 // 音频流检查
 func (s ShuMei) AudioStream(ctx utils.Context, p ShumeiAsyncAudioStream) (bool, *AudioStreamResponse) {
 	turl := s.ShumeiUrl.VoiceStreamUrl //"http://api-audiostream-sh.fengkongcloud.com/audiostream/v4"
+
 	data := map[string]interface{}{
 		"tokenId":    s.tokenHandler(p.UserId),
 		"lang":       s.voiceLangeHandler(p.Lang),
@@ -481,7 +501,7 @@ func (s ShuMei) AudioStream(ctx utils.Context, p ShumeiAsyncAudioStream) (bool, 
 		"appId":     s.AppId,
 		"eventId":   p.EventId,
 		"type":      p.VoiceType,
-		"callback":  p.Callback,
+		"callback":  s.HandlerCallBackUrl(p.Callback),
 		"data":      data,
 	}
 
@@ -536,13 +556,14 @@ func (s ShuMei) VideoStream(ctx utils.Context, p ShumeiAsyncVideoStream) (bool, 
 	}
 
 	payload := map[string]interface{}{
-		"accessKey":   s.AccessKey,
-		"appId":       s.AppId,
-		"eventId":     p.EventId,
-		"imgType":     p.VideoType,
-		"audioType":   p.VoiceType,
-		"imgCallback": p.ImgCallback,
-		"data":        data,
+		"accessKey":     s.AccessKey,
+		"appId":         s.AppId,
+		"eventId":       p.EventId,
+		"imgType":       p.VideoType,
+		"audioType":     p.VoiceType,
+		"imgCallback":   s.HandlerCallBackUrl(p.ImgCallback),
+		"audioCallback": s.HandlerCallBackUrl(p.AudioCallback),
+		"data":          data,
 	}
 
 	res := &AudioStreamResponse{}

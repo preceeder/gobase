@@ -1,5 +1,5 @@
 /*
-File Name:  goRedis.py
+File Name:  goRedis.go
 Description:
 Author:      Chenghu
 Date:       2023/8/18 13:39
@@ -253,7 +253,7 @@ func Script(ctx utils.Context, db *redis.Client, script string, keys []string, v
 	rcmd := rd.EvalSha(ctx, hesHasScript, keys, values...)
 	err = rcmd.Err()
 	if err != nil {
-		slog.Error("EvalSha error", "error", err.Error(), "requestId", ctx.RequestId)
+		slog.Error("EvalSha error", "error", err.Error(), "keys", keys, "values", values, "requestId", ctx.RequestId)
 		return nil, err
 	}
 	return rcmd, nil
@@ -286,7 +286,7 @@ func Do(ctx utils.Context, cmd map[string]any, agrs map[string]any, includeArgs 
 	}
 	rcmd := rd.Do(ctx, cmdStr...)
 	if rcmd.Err() != nil {
-		slog.Error("redisDb exec failed", "error", rcmd.Err().Error(), "requestId", ctx.RequestId)
+		slog.Error("redisDb exec failed", "error", rcmd.Err().Error(), "cmd", cmdStr, "requestId", ctx.RequestId)
 		return nil, rcmd.Err()
 	}
 
@@ -313,12 +313,12 @@ func Do(ctx utils.Context, cmd map[string]any, agrs map[string]any, includeArgs 
 		}
 		keyStr, err := utils.StrBindName(rkey.(string), agrs, []byte(""))
 		if err != nil {
-			slog.Error("redisDb key args pares err", "requestId", ctx.RequestId)
+			slog.Error("redisDb key args pares err", "key", rkey, "args", agrs, "requestId", ctx.RequestId)
 			panic("redisDb key args pares err")
 		}
 		err = rd.Expire(ctx, keyStr, expt).Err()
 		if err != nil {
-			slog.Error("redisDb key set exp err: "+err.Error(), "requestId", ctx.RequestId)
+			slog.Error("redisDb key set exp err: "+err.Error(), "key", keyStr, "exp", expt, "requestId", ctx.RequestId)
 			panic("redisDb key set exp err: " + err.Error())
 		}
 	}
