@@ -74,7 +74,7 @@ func GinRecovery() gin.HandlerFunc {
 			slog.Error("Recovery from panic ",
 				"err", err,
 				"trace", trace,
-				"request", params.String(),
+				"request", params,
 				"requestId", requestId,
 			)
 
