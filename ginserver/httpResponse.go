@@ -12,7 +12,7 @@ type HttpResponse interface {
 	GetResponse() any
 }
 
-var HttpResponseType = reflect.TypeOf((*HttpResponse)(nil))
+var HttpResponseType = reflect.TypeOf((*HttpResponse)(nil)).Elem()
 
 type BaseHttpResponse struct {
 	Success bool `json:"success"`
