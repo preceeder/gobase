@@ -346,11 +346,13 @@ func match(path string, route Route) gin.HandlerFunc {
 
 			res := route.Method.Call(arguments)
 			if res != nil {
-				if res[0].Type().Implements(HttpResponseType) {
+				if data, ok := res[0].Interface().(HttpResponse); ok {
 					// 有返回结果的这里处理
-					c.JSON(http.StatusOK, res[0].Interface())
+					c.JSON(http.StatusOK, data.GetResponse())
+					return
 				} else if he, ok := res[0].Interface().(HttpError); ok {
 					c.JSON(he.GetCode(), he.GetMap())
+					return
 				}
 			}
 		}

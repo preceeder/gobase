@@ -20,7 +20,7 @@ type BaseHttpResponse struct {
 	Data    any  `json:"data"`
 }
 
-func (h *BaseHttpResponse) GetResponse() any {
+func (h BaseHttpResponse) GetResponse() any {
 	if h.Code == 0 {
 		h.Code = 200
 	}
