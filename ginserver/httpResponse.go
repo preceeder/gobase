@@ -12,14 +12,17 @@ type HttpResponse interface {
 	GetResponse() any
 }
 
-var HttpResponseType = reflect.TypeOf((*HttpResponse)(nil)).Elem()
+var HttpResponseType = reflect.TypeOf((*HttpResponse)(nil))
 
 type BaseHttpResponse struct {
 	Success bool `json:"success"`
-	Code    bool `json:"code"`
+	Code    int  `json:"code"`
 	Data    any  `json:"data"`
 }
 
-func (h BaseHttpResponse) GetResponse() any {
+func (h *BaseHttpResponse) GetResponse() any {
+	if h.Code == 0 {
+		h.Code = 200
+	}
 	return h
 }
