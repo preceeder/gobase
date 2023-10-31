@@ -6,6 +6,16 @@
 
 package ginserver
 
+import "reflect"
+
+type HttpError interface {
+	GetCode() int // 正常情况都是 200， 错误情况一般是  403
+	GetMap() map[string]any
+	Error() string
+}
+
+var HttpErrorType = reflect.TypeOf((*HttpError)(nil)).Elem()
+
 type BaseHttpError struct {
 	Code      StatusCode
 	ErrorCode ErrorCode

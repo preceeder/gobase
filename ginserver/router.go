@@ -79,7 +79,7 @@ var Routes = []Route{}
 func InitRouter() *gin.Engine {
 	//初始化路由
 	r := gin.New()
-	r.Use(Cors(), GinLogger(), GinRecovery(true))
+	r.Use(Cors(), GinLogger(), GinRecovery())
 	//docs.SwaggerInfo.BasePath = "/api"
 	//打开 host:port/swagger/index.html
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
@@ -346,8 +346,12 @@ func match(path string, route Route) gin.HandlerFunc {
 
 			res := route.Method.Call(arguments)
 			if res != nil {
-				// 有返回结果的这里处理
-				c.JSON(http.StatusOK, res[0].Interface())
+				if res[0].Type().Implements(HttpResponseType) {
+					// 有返回结果的这里处理
+					c.JSON(http.StatusOK, res[0].Interface())
+				} else if he, ok := res[0].Interface().(HttpError); ok {
+					c.JSON(he.GetCode(), he.GetMap())
+				}
 			}
 		}
 	}
@@ -356,7 +360,12 @@ func match(path string, route Route) gin.HandlerFunc {
 func ParamHandler(c *gin.Context, requestId string, p ParamsRo) reflect.Value {
 	replyv := reflect.New(p.Data.Elem())
 	datan := replyv.Interface()
-	err := c.MustBindWith(datan, p.dty)
+	var err error
+	if p.dty == binding.JSON {
+		err = c.ShouldBindBodyWith(datan, binding.JSON)
+	} else {
+		err = c.MustBindWith(datan, p.dty)
+	}
 	if err != nil {
 		c.Abort()
 		slog.Error("获取用户参数失败", "error", err.Error(), "requestId", requestId)
