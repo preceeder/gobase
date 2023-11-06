@@ -22,7 +22,7 @@ type BaseHttpResponse struct {
 
 func (h BaseHttpResponse) GetResponse() any {
 	if h.Code == 0 {
-		h.Code = 200
+		return map[string]any{"success": h.Success, "code": 200, "data": h.Data}
 	}
-	return h
+	return map[string]any{"success": h.Success, "code": h.Code, "data": h.Data}
 }

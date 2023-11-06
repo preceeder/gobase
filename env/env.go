@@ -37,21 +37,6 @@ func InitEnv(config viper.Viper) {
 	}
 }
 
-//func ReadEnvConfig(v viper.Viper) Environment {
-//	env := v.Sub("env")
-//	if env == nil {
-//		fmt.Printf("env config is nil")
-//		os.Exit(1)
-//	}
-//	ev := Environment{}
-//	err := env.Unmarshal(&ev)
-//	if err != nil {
-//		fmt.Printf("env config is nil")
-//		os.Exit(1)
-//	}
-//	return ev
-//}
-
 func GetEnv(k string) string {
 	e, ok := os.LookupEnv(k)
 	if !ok {
