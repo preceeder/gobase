@@ -37,7 +37,7 @@ func (g *Date) Scan(src interface{}) error {
 	return nil
 }
 
-type DateTime carbon.Carbon
+type DateTime carbon.DateTime
 
 //	func (d Date) Value() (driver.Value, error) {
 //		tempTime, _ := time.Parse("%Y-%m-%d", string(d))
@@ -56,7 +56,7 @@ func (g *DateTime) Scan(src interface{}) error {
 	}
 	//v, _ := time.Parse("%Y-%m-%d", string(source))
 	v := carbon.ParseByFormat(string(source), "2006-01-02 15:04:05")
-	*g = DateTime(v)
+	*g = DateTime(carbon.DateTime{Carbon: v})
 	return nil
 }
 
