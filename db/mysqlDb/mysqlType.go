@@ -37,6 +37,29 @@ func (g *Date) Scan(src interface{}) error {
 	return nil
 }
 
+type DateTime carbon.Carbon
+
+//	func (d Date) Value() (driver.Value, error) {
+//		tempTime, _ := time.Parse("%Y-%m-%d", string(d))
+//		return driver.Value(string(tempTime.UnixMilli())), nil
+//	}
+func (g *DateTime) Scan(src interface{}) error {
+	var source []byte
+	// let's support string and []byte
+	switch src.(type) {
+	case string:
+		source = []byte(src.(string))
+	case []byte:
+		source = src.([]byte)
+	default:
+		return errors.New("Incompatible type for GzippedText")
+	}
+	//v, _ := time.Parse("%Y-%m-%d", string(source))
+	v := carbon.ParseByFormat(string(source), "2006-01-02 15:04:05")
+	*g = DateTime(v)
+	return nil
+}
+
 type Json map[string]any
 
 func (j *Json) Scan(src interface{}) error {
