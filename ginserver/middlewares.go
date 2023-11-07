@@ -1,22 +1,18 @@
 package ginserver
 
 import (
+	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/preceeder/gobase/try"
 	"github.com/preceeder/gobase/utils"
 	"github.com/preceeder/gobase/utils/datetimeh"
+	"io"
 	"log/slog"
 	"net/http"
-	"net/http/httputil"
+	"net/url"
 	"strconv"
 	"time"
 )
-
-type HttpError interface {
-	GetCode() int // 正常情况都是 200， 错误情况一般是  403
-	GetMap() map[string]any
-	Error() string
-}
 
 func Cors() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -61,7 +57,7 @@ func GinLogger() gin.HandlerFunc {
 }
 
 // GinRecovery recover掉项目可能出现的panic，并使用zap记录相关日志
-func GinRecovery(stack bool) gin.HandlerFunc {
+func GinRecovery() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		requestId := c.GetString("requestId")
 		defer try.CatchException(func(err any, trace string) {
@@ -73,19 +69,52 @@ func GinRecovery(stack bool) gin.HandlerFunc {
 				ResStatus = he.GetCode()
 			}
 
-			httpRequest, _ := httputil.DumpRequest(c.Request, true)
-
+			//httpRequest, _ := httputil.DumpRequest(c.Request, true)
+			params := GetRequestParams(c)
 			slog.Error("Recovery from panic ",
 				"err", err,
 				"trace", trace,
-				"request", string(httpRequest),
+				"request", params,
 				"requestId", requestId,
 			)
 
 			c.AbortWithStatus(ResStatus)
 
 		})
-
 		c.Next()
 	}
+}
+
+type ParamsData struct {
+	Body  string
+	Query url.Values
+	Url   string
+}
+
+func (p ParamsData) String() string {
+	str, _ := sonic.ConfigFastest.MarshalToString(p)
+	return str
+}
+
+func GetRequestParams(c *gin.Context) ParamsData {
+
+	var body []byte
+	if cb, ok := c.Get(gin.BodyBytesKey); ok {
+		if cbb, ok := cb.([]byte); ok {
+			body = cbb
+		}
+	}
+	if body == nil {
+		bo, err := io.ReadAll(c.Request.Body)
+		if err != nil {
+			body = []byte("")
+		} else {
+			body = bo
+		}
+	}
+
+	query := c.Request.Form
+	urlp := c.Request.RequestURI
+
+	return ParamsData{Body: string(body), Query: query, Url: urlp}
 }

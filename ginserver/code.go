@@ -31,6 +31,7 @@ type StatusCode int
 
 const (
 	StatusCodeSystemError StatusCode = 500 // 系统错误 代码
+	StatusCodeLoginError  StatusCode = 400 // 登录失败
 	StatusCodeTokenError  StatusCode = 401 // token 验证失败代码
 	StatusCodeCommonErr   StatusCode = 403 // 通用错误代码
 	StatusCodeSuccess     StatusCode = 200 // 成功代码

@@ -9,6 +9,7 @@ package ginserver
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/preceeder/gobase/utils"
 	"net/http"
 	"strconv"
@@ -34,6 +35,14 @@ type GContext struct {
 	RequestId string
 	UContext  utils.Context
 	UserId    string // 只有有token的时候才会存在
+}
+
+// obj 必须是 指针
+func (c GContext) GetBody(obj any) {
+	err := c.Context.ShouldBindBodyWith(obj, binding.JSON)
+	if err != nil {
+		panic(BaseHttpError{Code: StatusCodeCommonErr, ErrorCode: CodeParameterError, Message: "Parameter abnormality"})
+	}
 }
 
 func (c GContext) QueryInt(key string) (int, error) {

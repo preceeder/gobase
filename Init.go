@@ -75,7 +75,7 @@ func WithBinlogOptional(c bool) func(*initOptional, viper.Viper) {
 	}
 }
 
-func WithImOptional(c bool) func(*initOptional, viper.Viper) {
+func WithRonYunOptional(c bool) func(*initOptional, viper.Viper) {
 	return func(il *initOptional, config viper.Viper) {
 		il.withIm = c
 		if c == true {
