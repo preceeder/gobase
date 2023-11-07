@@ -166,3 +166,22 @@ type CloseStreamResponse struct {
 	Message   string `json:"message"`
 	RequestID string `json:"requestId"`
 }
+
+type TianWangResponse struct {
+	Code      int            `json:"code"`
+	Message   string         `json:"message"`
+	RequestID string         `json:"requestId"`
+	RiskLevel string         `json:"riskLevel"`
+	Detail    map[string]any `json:"detail"`
+}
+
+type TianWangParams struct {
+	EventId        string `json:"eventId"`
+	TokenId        string `json:"tokenId"`
+	Ip             string `json:"ip"`
+	SmDeviceId     string `json:"smDeviceId"`
+	Phone          string `json:"phone"`
+	Channel        string `json:"channel"`
+	Version        string `json:"version"`
+	RegisterMethod string `json:"registerMethod"`
+}

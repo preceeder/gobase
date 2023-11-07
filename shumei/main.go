@@ -12,6 +12,7 @@ import (
 	mapset "github.com/deckarep/golang-set"
 	"github.com/go-resty/resty/v2"
 	"github.com/preceeder/gobase/utils"
+	"github.com/preceeder/gobase/utils/datetimeh"
 	"github.com/spf13/viper"
 	"log/slog"
 	"net/url"
@@ -608,4 +609,27 @@ func (s ShuMei) CloseStreamCheck(ctx utils.Context, requestId string, ltype stri
 	}
 	return true, res
 
+}
+
+func (s ShuMei) TianWang(ctx utils.Context, p TianWangParams) map[string]any {
+	data := map[string]any{
+		"accessKey": s.AccessKey,
+		"appId":     s.AppId,
+		"eventId":   p.EventId,
+		"data": map[string]any{
+			"tokenId":    p.TokenId,
+			"ip":         p.Ip,
+			"timestamp":  datetimeh.Now().TimestampMilli(),
+			"deviceId":   p.SmDeviceId,
+			"phone":      p.Phone,
+			"os":         p.Channel,
+			"appVersion": p.Version,
+			"type":       p.RegisterMethod,
+		},
+	}
+	response, err := s.Send("http://api-skynet-bj.fengkongcloud.com/v4/event", data, nil)
+	if err != nil {
+		slog.Error("tianwang 事件接口访问失败", "error", err.Error(), "requestId", ctx.RequestId)
+	}
+	return response
 }
