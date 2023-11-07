@@ -27,20 +27,21 @@ import (
 )
 
 type initOptional struct {
-	withRedis       bool
-	withMysql       bool
-	withIm          bool
-	withJigou       bool
-	withRpc         bool
-	withShumei      bool
-	withAliOss      bool
-	withNsqConsumer bool
-	withNsqProducer bool
+	WithRedis       bool
+	WithMysql       bool
+	WithRonYun      bool
+	WithTencentIm   bool
+	WithJigou       bool
+	WithRpc         bool
+	WithShumei      bool
+	WithAliOss      bool
+	WithNsqConsumer bool
+	WithNsqProducer bool
 }
 
 func WithGinOptional(c bool) func(*initOptional, viper.Viper) {
 	return func(il *initOptional, config viper.Viper) {
-		il.withRedis = c
+		il.WithRedis = c
 		if c == true {
 			ginserver.InitGinWithViperConfig(config)
 		}
@@ -49,7 +50,7 @@ func WithGinOptional(c bool) func(*initOptional, viper.Viper) {
 
 func WithRedisOptional(c bool) func(*initOptional, viper.Viper) {
 	return func(il *initOptional, config viper.Viper) {
-		il.withRedis = c
+		il.WithRedis = c
 		if c == true {
 			redisDb.InitRedisWithViperConfig(config)
 		}
@@ -58,7 +59,7 @@ func WithRedisOptional(c bool) func(*initOptional, viper.Viper) {
 
 func WithMysqlOptional(c bool) func(*initOptional, viper.Viper) {
 	return func(il *initOptional, config viper.Viper) {
-		il.withMysql = c
+		il.WithMysql = c
 		if c == true {
 			mysqlDb.InitMysqlWithViperConfig(config)
 
@@ -68,7 +69,7 @@ func WithMysqlOptional(c bool) func(*initOptional, viper.Viper) {
 
 func WithBinlogOptional(c bool) func(*initOptional, viper.Viper) {
 	return func(il *initOptional, config viper.Viper) {
-		il.withMysql = c
+		il.WithMysql = c
 		if c == true {
 			mysqlDb.InitBinlogWithViperConfig(config)
 		}
@@ -77,7 +78,7 @@ func WithBinlogOptional(c bool) func(*initOptional, viper.Viper) {
 
 func WithRonYunOptional(c bool) func(*initOptional, viper.Viper) {
 	return func(il *initOptional, config viper.Viper) {
-		il.withIm = c
+		il.WithRonYun = c
 		if c == true {
 			rongyun.InitWithViper(config)
 		}
@@ -85,7 +86,7 @@ func WithRonYunOptional(c bool) func(*initOptional, viper.Viper) {
 }
 func WithJigouOptional(c bool) func(*initOptional, viper.Viper) {
 	return func(il *initOptional, config viper.Viper) {
-		il.withJigou = c
+		il.WithJigou = c
 		if c == true {
 			jigou.InitWithViper(config)
 
@@ -95,7 +96,7 @@ func WithJigouOptional(c bool) func(*initOptional, viper.Viper) {
 
 func WithRpcOptional(c bool) func(*initOptional, viper.Viper) {
 	return func(il *initOptional, config viper.Viper) {
-		il.withRpc = c
+		il.WithRpc = c
 		if c == true {
 			grpcm.InitRpc(config)
 		}
@@ -104,7 +105,7 @@ func WithRpcOptional(c bool) func(*initOptional, viper.Viper) {
 
 func WithAliYunPushOptional(c bool) func(*initOptional, viper.Viper) {
 	return func(il *initOptional, config viper.Viper) {
-		il.withRpc = c
+		il.WithRpc = c
 		if c == true {
 			push.InitWithViper(config)
 		}
@@ -113,7 +114,7 @@ func WithAliYunPushOptional(c bool) func(*initOptional, viper.Viper) {
 
 func WithShumeiOptional(c bool) func(*initOptional, viper.Viper) {
 	return func(il *initOptional, config viper.Viper) {
-		il.withShumei = c
+		il.WithShumei = c
 		if c == true {
 			shumei.InitShumeiWithViperConfig(config)
 		}
@@ -122,7 +123,7 @@ func WithShumeiOptional(c bool) func(*initOptional, viper.Viper) {
 
 func WithAliOssOptional(c bool) func(optional *initOptional, viper2 viper.Viper) {
 	return func(il *initOptional, config viper.Viper) {
-		il.withAliOss = c
+		il.WithAliOss = c
 		if c == true {
 			oss.InitAliOssWithViper(config)
 		}
@@ -131,7 +132,7 @@ func WithAliOssOptional(c bool) func(optional *initOptional, viper2 viper.Viper)
 
 func WithNsqConsumerOptional(c bool) func(optional *initOptional, viper2 viper.Viper) {
 	return func(il *initOptional, config viper.Viper) {
-		il.withNsqConsumer = c
+		il.WithNsqConsumer = c
 		if c == true {
 			nsq_consumer.InitNsqConsumerConfig(config)
 		}
@@ -140,7 +141,16 @@ func WithNsqConsumerOptional(c bool) func(optional *initOptional, viper2 viper.V
 
 func WithNsqProducerOptional(c bool) func(optional *initOptional, viper2 viper.Viper) {
 	return func(il *initOptional, config viper.Viper) {
-		il.withNsqProducer = c
+		il.WithNsqProducer = c
+		if c == true {
+			nsq_producer.InitNsqProducer(config)
+		}
+	}
+}
+
+func WithTencentImOptional(c bool) func(optional *initOptional, viper2 viper.Viper) {
+	return func(il *initOptional, config viper.Viper) {
+		il.WithTencentIm = c
 		if c == true {
 			nsq_producer.InitNsqProducer(config)
 		}
