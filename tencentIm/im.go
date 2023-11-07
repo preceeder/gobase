@@ -56,7 +56,7 @@ func InitIm() {
 
 // respBody 必须是指针
 
-func SendImRequest(ctx utils.Context, serverName string, requestData any, respBody *BaseResponse) error {
+func SendImRequest(ctx utils.Context, serverName string, requestData any, respBody any) error {
 	req := ImClient.R().SetBody(requestData)
 	if respBody != nil {
 		req.SetResult(respBody)
@@ -68,7 +68,6 @@ func SendImRequest(ctx utils.Context, serverName string, requestData any, respBo
 		return err
 	}
 	return nil
-
 }
 
 func setUrl(serverName string) string {
