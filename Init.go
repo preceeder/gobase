@@ -22,6 +22,7 @@ import (
 	"github.com/preceeder/gobase/logs"
 	"github.com/preceeder/gobase/rongyun"
 	"github.com/preceeder/gobase/shumei"
+	"github.com/preceeder/gobase/volc"
 
 	"github.com/spf13/viper"
 )
@@ -37,6 +38,7 @@ type initOptional struct {
 	WithAliOss      bool
 	WithNsqConsumer bool
 	WithNsqProducer bool
+	WithVocl        bool
 }
 
 func WithGinOptional(c bool) func(*initOptional, viper.Viper) {
@@ -153,6 +155,15 @@ func WithTencentImOptional(c bool) func(optional *initOptional, viper2 viper.Vip
 		il.WithTencentIm = c
 		if c == true {
 			nsq_producer.InitNsqProducer(config)
+		}
+	}
+}
+
+func WithVolcOptional(c bool) func(optional *initOptional, viper2 viper.Viper) {
+	return func(il *initOptional, config viper.Viper) {
+		il.WithVocl = c
+		if c == true {
+			volc.InitWithViper(config)
 		}
 	}
 }

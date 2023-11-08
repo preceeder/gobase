@@ -145,3 +145,5 @@ func PushMessage(ctx utils.Context, pushTask *push20160801.MassPushRequestPushTa
 		return
 	}
 }
+
+// 使用的时候 需要先调用GetMessageFormat， 然后在调用 PushMessage
