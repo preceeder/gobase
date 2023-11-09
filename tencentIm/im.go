@@ -129,3 +129,18 @@ func getEcdsaSign() string {
 	}
 	return UserSign
 }
+
+func GetUserSign(userId string) (userSign string, err error) {
+	if TencentImConfig.UseSha == "ECDSA-SHA256" {
+		userSign, err = ECDSASHA256.GenerateUsersigWithExpire(TencentImConfig.PrivateKey, TencentImConfig.AppId, userId, int64(TencentImConfig.Expire))
+		if err != nil {
+			slog.Error("生成im usersign error", "error", err.Error())
+		}
+	} else if TencentImConfig.UseSha == "HMAC-SHA256" {
+		userSign, err = HMACSHA256.GenUserSig(TencentImConfig.AppId, TencentImConfig.Key, userId, TencentImConfig.Expire)
+		if err != nil {
+			slog.Error("生成im usersign error", "error", err.Error())
+		}
+	}
+	return
+}

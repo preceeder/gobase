@@ -17,14 +17,13 @@ import (
 
 /*
 * 发送单聊消息
- *params serverName string url的映射 ApiMap
  *params fromId string 发送者id
  *params toId string 接收者id
  *params content MsgContent 消息内容
  *params cloudCustomData 自定义消息
  *params sendMsgControl []string 消息发送控制选项, NoUnread 不计入未读数、NoLastMsg 不更新绘画列表、 WithMuteNotifications 该条消息的接收方对发送方设置的免打扰选项生效
  *params forbidCallbackControl []string 消息回调禁止开关，只对本条消息有效, ForbidBeforeSendMsgCallback 禁止发消息前回调, ForbidAfterSendMsgCallback 禁止发消息后回调
- *params syncOtherMachine int  0: 根据from_id判断，1：同步，2：不同步
+ *params syncOtherMachine int   1：把消息同步到 From_Account 在线终端和漫游上; 2：消息不同步至 From_Account; 若不填写默认情况下会将消息存 From_Account 漫游
  *params offLineData OfflinePushInfo 离线消息
 */
 func SendImMessage(ctx utils.Context, fromId string, toId string, content MsgContent, cloudCustomData string,
@@ -64,7 +63,6 @@ func SendImMessage(ctx utils.Context, fromId string, toId string, content MsgCon
 
 /*
 * 批量发送单聊消息
- *params serverName string url的映射 ApiMap
  *params fromId string 发送者id
  *params toIds []string 接收者id
  *params content MsgContent 消息内容

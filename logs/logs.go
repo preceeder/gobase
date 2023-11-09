@@ -80,11 +80,10 @@ func initSlog(cfg LogConfig) {
 		writeBuild = io.MultiWriter(lumberJackInfo)
 	}
 	var log *slog.Logger
-	if env.GetEnv("env") == "product" || env.GetEnv("env") == "test" {
-		log = slog.New(slog.NewJSONHandler(writeBuild, opt))
-		slog.SetDefault(log)
-	} else if env.GetEnv("env") == "local" {
-		slog.Default()
+	log = slog.New(slog.NewJSONHandler(writeBuild, opt))
+	slog.SetDefault(log)
+	if env.GetEnv("env") == "local" {
+		//slog.Default()
 		log = slog.New(slog.NewTextHandler(writeBuild, opt))
 		slog.SetDefault(log)
 
