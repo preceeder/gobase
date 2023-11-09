@@ -11,6 +11,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"log/slog"
 	"net/http"
+	"path"
 	"reflect"
 	"runtime"
 	"strings"
@@ -31,13 +32,13 @@ type ParamsRo struct {
 
 // 路由结构体
 type Route struct {
-	path        string            //url路径
-	httpMethod  string            //http方法 get post
-	rv          reflect.Value     // 结构体
-	Method      reflect.Value     //方法路由
-	Args        []ParamsRo        //参数类型
-	Middlewares []gin.HandlerFunc // 接口中间件
-
+	path                string            //url路径
+	httpMethod          string            //http方法 get post
+	rv                  reflect.Value     // 结构体
+	Method              reflect.Value     //方法路由
+	Args                []ParamsRo        //参数类型
+	Middlewares         []gin.HandlerFunc // 接口中间件
+	NoUseBasePrefixPath bool              // 是否禁用 BasePrefixPathInvalid   bool
 }
 
 // 接口路由前缀 配置
@@ -166,17 +167,8 @@ func Register(controller interface{}) bool {
 					}
 					params = append(params, ParamsRo{Data: pp, dty: tag, DefaultData: DefaultData})
 				}
-				//qtag := pp.Field(0).Tag.Get("gin")
-				//var tag binding.Binding
-				//if t, ok := paramsTypeMap[qtag]; ok {
-				//	tag = t
-				//} else {
-				//	panic("params tag deletion")
-				//}
-				//
-				//params = append(params, ParamsRo{Data: pp, dty: tag})
 			}
-			route := Route{path: path, rv: v, Method: method, Args: params, httpMethod: httpMethod, Middlewares: middlewares}
+			route := Route{path: path, rv: v, Method: method, Args: params, httpMethod: httpMethod, Middlewares: middlewares, NoUseBasePrefixPath: dv.NoUseBasePrefixPath}
 			Routes = append(Routes, route)
 		}
 	}
@@ -192,14 +184,16 @@ func apiConfig(data any) (apiData ApiRouteConfig) {
 	return
 }
 
-func subApiconfigPares(config []ApiRouterSubConfig, module string) (path string, middlewares []gin.HandlerFunc) {
+func subApiconfigPares(config []ApiRouterSubConfig, module string) (path string, middlewares []gin.HandlerFunc, needBasePrifix bool) {
+	needBasePrifix = true
 	lc := len(config)
 	path = ""
 	if lc > 0 {
 		for i := 0; i < lc; i++ {
 			bp, _ := config[i].NoUseBasePrefixPath.(bool)
 			if config[i].NoUseBasePrefixPath == nil || bp == false {
-				path += BasePrefixPath
+				//path += BasePrefixPath
+				needBasePrifix = false
 				break
 			}
 		}
@@ -227,7 +221,10 @@ func subApiconfigPares(config []ApiRouterSubConfig, module string) (path string,
 			}
 		}
 	} else {
-		path += "/" + BasePrefixPath + "/" + module
+		needBasePrifix = false
+		//path += "/" + BasePrefixPath + "/" + module
+		path += "/" + module
+
 	}
 
 	var pathSlice []string
@@ -241,9 +238,10 @@ func subApiconfigPares(config []ApiRouterSubConfig, module string) (path string,
 }
 
 type PW struct {
-	Path        string
-	Middlewares []gin.HandlerFunc
-	HttpMethod  string
+	Path                string
+	Middlewares         []gin.HandlerFunc
+	HttpMethod          string
+	NoUseBasePrefixPath bool
 }
 
 func PdHandler(apiData ApiRouteConfig, module string) map[string][]PW {
@@ -282,8 +280,8 @@ func PdHandler(apiData ApiRouteConfig, module string) map[string][]PW {
 				if ac != nil {
 					temp = append(temp, *ac)
 				}
-				path, middlewares := subApiconfigPares(temp, module)
-				sd[funname] = append(sd[funname], PW{Path: path, Middlewares: middlewares, HttpMethod: v})
+				path, middlewares, needBasePrifix := subApiconfigPares(temp, module)
+				sd[funname] = append(sd[funname], PW{Path: path, Middlewares: middlewares, HttpMethod: v, NoUseBasePrefixPath: needBasePrifix})
 			}
 		}
 		if _, ok := sd[k]; !ok {
@@ -291,8 +289,8 @@ func PdHandler(apiData ApiRouteConfig, module string) map[string][]PW {
 			if ac != nil {
 				temp = append(temp, *ac)
 			}
-			path, middlewares := subApiconfigPares(temp, module)
-			sd[k] = append(sd[k], PW{Path: path, Middlewares: middlewares, HttpMethod: v})
+			path, middlewares, needBasePrifix := subApiconfigPares(temp, module)
+			sd[k] = append(sd[k], PW{Path: path, Middlewares: middlewares, HttpMethod: v, NoUseBasePrefixPath: needBasePrifix})
 			//sd[k] = PW{Path: path, Middlewares: middlewares, HttpMethod: v}
 		}
 	}
@@ -304,14 +302,19 @@ func PdHandler(apiData ApiRouteConfig, module string) map[string][]PW {
 // 绑定基本路由
 func Bind(e *gin.Engine) {
 	for _, route := range Routes {
+		var routerPath string = route.path
+		// 如果要禁用 就不用在处理了， 不禁用就需要在处理
+		if !route.NoUseBasePrefixPath {
+			routerPath = path.Join(BasePrefixPath, routerPath)
+		}
 		if route.httpMethod == "GET" {
-			e.GET(route.path, append(route.Middlewares, match(route.path, route))...)
+			e.GET(routerPath, append(route.Middlewares, match(route.path, route))...)
 		} else if route.httpMethod == "POST" {
-			e.POST(route.path, append(route.Middlewares, match(route.path, route))...)
+			e.POST(routerPath, append(route.Middlewares, match(route.path, route))...)
 		} else if route.httpMethod == "PUT" {
-			e.PUT(route.path, append(route.Middlewares, match(route.path, route))...)
+			e.PUT(routerPath, append(route.Middlewares, match(route.path, route))...)
 		} else if route.httpMethod == "DELETE" {
-			e.DELETE(route.path, append(route.Middlewares, match(route.path, route))...)
+			e.DELETE(routerPath, append(route.Middlewares, match(route.path, route))...)
 		}
 	}
 }

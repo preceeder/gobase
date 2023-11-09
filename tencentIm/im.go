@@ -130,6 +130,7 @@ func getEcdsaSign() string {
 	return UserSign
 }
 
+// 获取用户的 token
 func GetUserSign(userId string) (userSign string, err error) {
 	if TencentImConfig.UseSha == "ECDSA-SHA256" {
 		userSign, err = ECDSASHA256.GenerateUsersigWithExpire(TencentImConfig.PrivateKey, TencentImConfig.AppId, userId, int64(TencentImConfig.Expire))
