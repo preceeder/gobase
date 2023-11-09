@@ -76,10 +76,12 @@ var actionMap = map[string]string{
 // 路由集合
 var Routes = []Route{}
 
-func InitRouter() *gin.Engine {
+func InitRouter(middlewares ...gin.HandlerFunc) *gin.Engine {
 	//初始化路由
 	r := gin.New()
-	r.Use(Cors(), GinLogger(), GinRecovery())
+	var baseMiddleWares = []gin.HandlerFunc{Cors(), GinLogger(), GinRecovery()}
+	baseMiddleWares = append(baseMiddleWares, middlewares...)
+	r.Use(middlewares...)
 	//docs.SwaggerInfo.BasePath = "/api"
 	//打开 host:port/swagger/index.html
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
@@ -353,6 +355,8 @@ func match(path string, route Route) gin.HandlerFunc {
 				} else if he, ok := res[0].Interface().(HttpError); ok {
 					c.JSON(he.GetCode(), he.GetMap())
 					return
+				} else {
+					c.JSON(http.StatusOK, res[0].Interface())
 				}
 			}
 		}
