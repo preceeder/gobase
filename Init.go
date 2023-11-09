@@ -22,6 +22,7 @@ import (
 	"github.com/preceeder/gobase/logs"
 	"github.com/preceeder/gobase/rongyun"
 	"github.com/preceeder/gobase/shumei"
+	"github.com/preceeder/gobase/tencentIm"
 	"github.com/preceeder/gobase/volc"
 
 	"github.com/spf13/viper"
@@ -154,7 +155,7 @@ func WithTencentImOptional(c bool) func(optional *initOptional, viper2 viper.Vip
 	return func(il *initOptional, config viper.Viper) {
 		il.WithTencentIm = c
 		if c == true {
-			nsq_producer.InitNsqProducer(config)
+			tencentIm.InitWithViper(config)
 		}
 	}
 }

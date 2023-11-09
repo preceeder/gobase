@@ -81,7 +81,7 @@ func InitRouter(middlewares ...gin.HandlerFunc) *gin.Engine {
 	r := gin.New()
 	var baseMiddleWares = []gin.HandlerFunc{Cors(), GinLogger(), GinRecovery()}
 	baseMiddleWares = append(baseMiddleWares, middlewares...)
-	r.Use(middlewares...)
+	r.Use(baseMiddleWares...)
 	//docs.SwaggerInfo.BasePath = "/api"
 	//打开 host:port/swagger/index.html
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
