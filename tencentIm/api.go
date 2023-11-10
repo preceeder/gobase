@@ -204,3 +204,22 @@ func QueryHistoryMessage(ctx utils.Context, operatorAccount, peerAccount, lastMs
 	}
 	return res, nil
 }
+
+// AccountImport
+// *添加单个IM账号
+// *params userId string 用户ID
+// *params nick string 昵称
+// *params avatar string 头像链接
+func AccountImport(ctx utils.Context, userId string, nick string, avatar string) (any, error) {
+	requestData := map[string]any{
+		"UserID":  userId,
+		"Nick":    nick,
+		"FaceUrl": avatar,
+	}
+	res := map[string]any{}
+	err := SendImRequest(ctx, "AccountImport", requestData, &res)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
