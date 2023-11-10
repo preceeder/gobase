@@ -15,8 +15,9 @@ import (
 var GinConfig ServerConfig
 
 type ServerConfig struct {
-	Name string
-	Addr string
+	Name                string `json:"name"`
+	Addr                string `json:"addr"`
+	HideServerMiddleLog bool   `json:"hideServerMiddleLog"` // 是否隐藏内置中间件的 http 日志
 }
 
 // 使用 viper读取的配置初始化

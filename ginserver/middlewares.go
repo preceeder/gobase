@@ -1,6 +1,7 @@
 package ginserver
 
 import (
+	"fmt"
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/preceeder/gobase/try"
@@ -32,7 +33,7 @@ func Cors() gin.HandlerFunc {
 }
 
 // GinLogger 接收gin框架默认的日志
-func GinLogger() gin.HandlerFunc {
+func GinLogger(serverLogHide bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 		path := c.Request.URL.Path
@@ -42,17 +43,19 @@ func GinLogger() gin.HandlerFunc {
 		c.Next()
 
 		cost := time.Since(start)
-		slog.Info("",
-			"method", c.Request.Method,
-			"path", path,
-			"requestId", requestId,
-			"userId", c.GetString("userId"),
-			"status", c.Writer.Status(),
-			"query", query,
-			"ip", c.ClientIP(),
-			"errors", c.Errors.ByType(gin.ErrorTypePrivate),
-			"cost", cost)
-
+		fmt.Println(serverLogHide)
+		if !serverLogHide {
+			slog.Info("",
+				"method", c.Request.Method,
+				"path", path,
+				"requestId", requestId,
+				"userId", c.GetString("userId"),
+				"status", c.Writer.Status(),
+				"query", query,
+				"ip", c.ClientIP(),
+				"errors", c.Errors.ByType(gin.ErrorTypePrivate),
+				"cost", cost)
+		}
 	}
 }
 

@@ -80,7 +80,7 @@ var Routes = []Route{}
 func InitRouter(middlewares ...gin.HandlerFunc) *gin.Engine {
 	//初始化路由
 	r := gin.New()
-	var baseMiddleWares = []gin.HandlerFunc{Cors(), GinLogger(), GinRecovery()}
+	var baseMiddleWares = []gin.HandlerFunc{Cors(), GinLogger(GinConfig.HideServerMiddleLog), GinRecovery()}
 	baseMiddleWares = append(baseMiddleWares, middlewares...)
 	r.Use(baseMiddleWares...)
 	//docs.SwaggerInfo.BasePath = "/api"
