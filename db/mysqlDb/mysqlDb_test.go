@@ -49,29 +49,38 @@ func TestSdb_Execute(t *testing.T) {
 }
 
 func TestSdb_Fetch(t *testing.T) {
-	type fields struct {
-		Db        Mdb
-		DefaultDb string
-	}
+	InitMysqlWithStruct(map[string]MysqlConfig{
+		"default": MysqlConfig{
+			Host: "127.0.0.1",
+			Port: "13306",
+
+			MaxOpenCons: 20,
+			MaxIdleCons: 5,
+		},
+	})
+
 	type args struct {
 		sqlStr string
 		params map[string]any
 		row    any
 	}
+	type Use struct {
+		Id int `json:"id" db:"id"`
+	}
+
+	var orew []Use = make([]Use, 0)
+
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
+		name string
+		args args
 	}{
 		// TODO: Add test cases.
+		{name: "", args: args{sqlStr: "select id from t_user limit 0, 10", params: nil, row: &orew}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := Sdb{
-				Db:        tt.fields.Db,
-				DefaultDb: tt.fields.DefaultDb,
-			}
-			s.Fetch(utils.Context{}, tt.args.sqlStr, tt.args.params, tt.args.row)
+			dd := MysqlDb.Fetch(utils.Context{}, tt.args.sqlStr, tt.args.params, tt.args.row)
+			fmt.Println(dd, tt.args.row)
 		})
 	}
 }
