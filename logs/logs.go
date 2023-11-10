@@ -86,7 +86,6 @@ func initSlog(cfg LogConfig) {
 		//slog.Default()
 		log = slog.New(slog.NewTextHandler(writeBuild, opt))
 		slog.SetDefault(log)
-
 	}
 }
 

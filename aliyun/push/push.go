@@ -19,28 +19,35 @@ import (
 	"strings"
 )
 
-var AliPushClient *push20160801.Client
-var AliPushConfig AliPush
+type AliPush struct {
+	Name     string `json:"name"`
+	KeyId    string `json:"keyId"`
+	Secret   string `json:"secret"`
+	EndPoint string `json:"endPoint"`
+	RegionId string `json:"regionId"`
+	AppKey   string `json:"appKey"`
+	Env      string `json:"env"`
+}
+
+type PushClient struct {
+	Client *push20160801.Client
+	Config AliPush
+}
+
+var AliPushClient map[string]PushClient = make(map[string]PushClient)
 
 func InitWithViper(config viper.Viper) {
 	//aliConfig := readAliPushConfig(config)
-	utils.ReadViperConfig(config, "ali_push", &AliPushConfig)
-	_, err := CreateClient(&(AliPushConfig.KeyId), &(AliPushConfig.Secret),
-		&(AliPushConfig.EndPoint), &(AliPushConfig.RegionId))
-	if err != nil {
-		slog.Error("阿里云push创建失败", "error", err.Error())
-		panic("阿里云push创建失败：" + err.Error())
+	cnf := []AliPush{}
+	utils.ReadViperConfig(config, "ali_push", &cnf)
+	for _, cf := range cnf {
+		client, err := CreateClient(&(cf.KeyId), &(cf.Secret), &(cf.EndPoint), &(cf.RegionId))
+		if err != nil {
+			slog.Error("阿里云push创建失败", "error", err.Error())
+			panic("阿里云push创建失败：" + err.Error())
+		}
+		AliPushClient[cf.Name] = PushClient{Client: client, Config: cf}
 	}
-}
-
-type AliPush struct {
-	KeyId         string `json:"keyId"`
-	Secret        string `json:"secret"`
-	EndPoint      string `json:"endPoint"`
-	RegionId      string `json:"regionId"`
-	AppKeyAndroid string `json:"appKeyAndroid"`
-	AppKeyIos     string `json:"appKeyIos"`
-	Env           string `json:"env"`
 }
 
 /**
@@ -63,7 +70,6 @@ func CreateClient(accessKeyId *string, accessKeySecret *string, endpoint *string
 	//config.Endpoint = endpoint // tea.String("cloudpush.aliyuncs.com")
 	_result = &push20160801.Client{}
 	_result, _err = push20160801.NewClient(config)
-	AliPushClient = _result
 	return _result, _err
 }
 
@@ -76,13 +82,16 @@ func CreateClient(accessKeyId *string, accessKeySecret *string, endpoint *string
  * @param content string 离线弹窗时的内容
  * @param env string PRODUCT | DEV
  */
-func GetMessageFormat(ctx utils.Context, userIds []string, title string, message map[string]any, StoreOffline bool,
+func (p PushClient) GetMessageFormat(ctx utils.Context, userIds []string, title string, message map[string]any, StoreOffline bool,
 	alter bool, content string, env string) *push20160801.MassPushRequestPushTask {
 
 	//message := map[string]any{
 	//	"type":    "",
 	//	"data":    message,
 	//}
+	if env == "" {
+		env = p.Config.Env
+	}
 	extParameters, err := sonic.MarshalString(map[string]any{"push": message})
 	if err != nil {
 		slog.Error("message json marshal error", "error", err.Error(), "requestId", ctx.RequestId)
@@ -132,14 +141,14 @@ func GetMessageFormat(ctx utils.Context, userIds []string, title string, message
  * @param pushTask *push20160801.MassPushRequestPushTask 先调用GetMessageFormat 拿到结果就是这里的参数
  * @param appKey string   由于android 和ios 可能不一样所以这里需要给个参数
  */
-func PushMessage(ctx utils.Context, pushTask *push20160801.MassPushRequestPushTask, appKey string) {
+func (p PushClient) PushMessage(ctx utils.Context, pushTask *push20160801.MassPushRequestPushTask) {
 	request := &push20160801.MassPushRequest{
-		AppKey:   number.ParseLong(&appKey),
+		AppKey:   number.ParseLong(&p.Config.AppKey),
 		PushTask: []*push20160801.MassPushRequestPushTask{pushTask},
 	}
 
 	// request.pushTask = new Push20160801.MassPushRequest.pushTask{};
-	_, _err := AliPushClient.MassPush(request)
+	_, _err := p.Client.MassPush(request)
 	if _err != nil {
 		slog.Error("阿里云 推送消息失败", "error", _err.Error(), "requestId", ctx.RequestId)
 		return
