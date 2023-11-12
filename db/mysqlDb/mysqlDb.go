@@ -356,7 +356,7 @@ func (s Sdb) InsertUpdate(ctx utils.Context, params map[string]any, tx ...*sqlx.
 	} else if uValues, ok := params["Update"].([]string); ok {
 		for _, name := range uValues {
 			tpv := ""
-			tpv = name + "=values(" + name + ")"
+			tpv = "`" + name + "`" + "=values(" + name + ")"
 			UpdateL = append(UpdateL, tpv)
 		}
 	}
