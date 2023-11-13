@@ -20,28 +20,26 @@ type ALFaceConfig struct {
 	Env      string `json:"env"`
 }
 
-type ALFaceClient struct {
+type ALFaceClientStruct struct {
 	Client *facebody.Client
 	Config ALFaceConfig
 }
 
-var AliFaceClientList map[string]ALFaceClient = make(map[string]ALFaceClient)
+var AliFaceClient ALFaceClientStruct
 
 func InitWithViper(config viper.Viper) {
 	//aliConfig := readAliPushConfig(config)
-	cnf := []ALFaceConfig{}
+	cnf := ALFaceConfig{}
 	utils.ReadViperConfig(config, "ali_face", &cnf)
-	for _, cf := range cnf {
-		client, err := CreateClient(&(cf.KeyId), &(cf.Secret), &(cf.EndPoint))
-		if err != nil {
-			return
-		}
-		if err != nil {
-			slog.Error("阿里云人脸识别创建失败", "error", err.Error())
-			panic("阿里云人脸识别创建失败：" + err.Error())
-		}
-		AliFaceClientList[cf.Name] = ALFaceClient{Client: client, Config: cf}
+	client, err := CreateClient(&(cnf.KeyId), &(cnf.Secret), &(cnf.EndPoint))
+	if err != nil {
+		return
 	}
+	if err != nil {
+		slog.Error("阿里云人脸识别创建失败", "error", err.Error())
+		panic("阿里云人脸识别创建失败：" + err.Error())
+	}
+	AliFaceClient = ALFaceClientStruct{Client: client, Config: cnf}
 }
 
 /**
@@ -62,7 +60,7 @@ func CreateClient(accessKeyId *string, accessKeySecret *string, endpoint *string
 	return _result, _err
 }
 
-func (alfc ALFaceClient) CompareFace(ctx utils.Context, imageUrlA string, imageUrlB string) *facebody.CompareFaceResponse {
+func (alfc ALFaceClientStruct) CompareFace(ctx utils.Context, imageUrlA string, imageUrlB string) *facebody.CompareFaceResponse {
 	compareFaceRequest := &facebody.CompareFaceRequest{
 		ImageURLA: tea.String(imageUrlA),
 		ImageURLB: tea.String(imageUrlB),
@@ -79,7 +77,7 @@ func (alfc ALFaceClient) CompareFace(ctx utils.Context, imageUrlA string, imageU
 	}
 }
 
-func (alfc ALFaceClient) RecognizeFac(ctx utils.Context, imageUrl string) *facebody.RecognizeFaceResponse {
+func (alfc ALFaceClientStruct) RecognizeFac(ctx utils.Context, imageUrl string) *facebody.RecognizeFaceResponse {
 	recognizeFaceRequest := &facebody.RecognizeFaceRequest{
 		ImageURL: tea.String(imageUrl),
 	}
