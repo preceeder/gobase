@@ -126,7 +126,8 @@ func (s Sdb) getTableName(ctx utils.Context, params map[string]any) (tableName s
 // 参数解析
 func (s Sdb) sqlPares(ctx utils.Context, osql string, params map[string]any) (sql string, args []any, db string) {
 	db = s.getDb(params)
-	sql, args, err := sqlx.Named(osql, params)
+	var err error
+	sql, args, err = sqlx.Named(osql, params)
 	if err != nil {
 		slog.Error("sqlx.Named error :"+err.Error(), "requestId", ctx.RequestId)
 		panic("sqlx.Named error :" + err.Error())
@@ -155,14 +156,7 @@ func (s Sdb) Select(ctx utils.Context, sqlStr string, params map[string]any, row
 
 func (s Sdb) Fetch(ctx utils.Context, sqlStr string, params map[string]any, row any) bool {
 	q, args, db := s.sqlPares(ctx, sqlStr, params)
-	rs, err := s.Db[db].Queryx(q, args...)
-	if err != nil {
-		slog.Error("mysqlDb Fetch failed", "error", err, "sql", sqlStr, "data", params, "requestId", ctx.RequestId)
-		return false
-	}
-	defer rs.Close()
-	err = sqlx.StructScan(rs, row)
-
+	err := sqlx.Select(s.Db[db], row, q, args...)
 	switch {
 	case errors.Is(err, sql.ErrNoRows):
 		return false
@@ -362,7 +356,7 @@ func (s Sdb) InsertUpdate(ctx utils.Context, params map[string]any, tx ...*sqlx.
 	} else if uValues, ok := params["Update"].([]string); ok {
 		for _, name := range uValues {
 			tpv := ""
-			tpv = name + "=values(" + name + ")"
+			tpv = "`" + name + "`" + "=values(" + name + ")"
 			UpdateL = append(UpdateL, tpv)
 		}
 	}
@@ -398,55 +392,6 @@ func (s Sdb) Execute(ctx utils.Context, sqlStr string, params map[string]any, tx
 	}
 	return rs
 }
-
-// []map[string]any{{"sql": "", "params":{}}}
-
-//func (s Sdb) DefaultTransactions(sqlObj []map[string]any) {
-//	s.Transactions("default", sqlObj)
-//}
-
-//func (s Sdb) Transactions(db string, sqlObj []map[string]any) {
-//
-//	tx, err := s.Db[db].BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
-//	var IsCommit bool = false
-//	defer func() {
-//		// 无条件提交
-//		if !IsCommit {
-//			tx.Commit()
-//		}
-//	}()
-//	if err != nil {
-//		panic("mysqlDb tx error: " + err.Error())
-//	}
-//	for _, sqlJ := range sqlObj {
-//		sqlStr, ok := sqlJ["sql"]
-//		if !ok {
-//			panic("Transactions not sqlstr ")
-//		}
-//		sqlParms, ok := sqlJ["params"]
-//		var q string
-//		var args []any
-//		if ok {
-//			tmp := sqlParms.(map[string]any)
-//			q, args, _ = s.sqlPares(sqlStr.(string), tmp)
-//		} else {
-//			q, args, _ = s.sqlPares(sqlStr.(string), nil)
-//		}
-//		_, execErr := tx.Exec(q, args...)
-//		if execErr != nil {
-//			_ = tx.Rollback()
-//			IsCommit = true
-//			slog.Error("mysqlDb Transactions execute failed", "error", execErr.Error())
-//			return
-//		}
-//	}
-//	if err := tx.Commit(); err != nil {
-//		slog.Error("mysqlDb Transactions commit failed", "error", err.Error())
-//
-//	}
-//	IsCommit = true
-//
-//}
 
 func (s Sdb) Transaction(ctx utils.Context, queryObj func(Sdb, *sqlx.Tx)) (err error) {
 

@@ -101,14 +101,24 @@ func (h *EventHandler) OnRow(e *canal.RowsEvent) error {
 	if !slice.Contain(v.Action, e.Action) {
 		return nil
 	}
+	var EnumMap map[int][]string = make(map[int][]string)
 
 	columsName := make([]string, len(e.Table.Columns))
 	for i, v := range e.Table.Columns {
 		columsName[i] = v.Name
+		if v.Type == 3 {
+			//fmt.Printf("Enumvalues %s %#v\n", v.Name, v.EnumValues)
+			EnumMap[i] = make([]string, 0)
+			EnumMap[i] = append(append(EnumMap[i], ""), v.EnumValues...)
+		}
 	}
-
 	targetData := make([]any, len(e.Rows))
 	for i, edata := range e.Rows {
+		for k, v := range EnumMap {
+			if ev := edata[k]; ev != nil {
+				edata[k] = v[ev.(int64)]
+			}
+		}
 		data, _ := utils.SliceToMap(columsName, edata)
 		dd, _ := sonic.ConfigFastest.Marshal(data)
 		if ok {
