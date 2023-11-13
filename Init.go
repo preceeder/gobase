@@ -8,6 +8,7 @@ Change Activity:
 package gobase
 
 import (
+	"github.com/preceeder/gobase/aliyun/face"
 	"github.com/preceeder/gobase/aliyun/oss"
 	"github.com/preceeder/gobase/aliyun/push"
 	nsq_consumer "github.com/preceeder/gobase/bnsq/consumer"
@@ -111,6 +112,15 @@ func WithAliYunPushOptional(c bool) func(*initOptional, viper.Viper) {
 		il.WithRpc = c
 		if c == true {
 			push.InitWithViper(config)
+		}
+	}
+}
+
+func WithAliYunFaceOptional(c bool) func(*initOptional, viper.Viper) {
+	return func(il *initOptional, config viper.Viper) {
+		il.WithRpc = c
+		if c == true {
+			face.InitWithViper(config)
 		}
 	}
 }
