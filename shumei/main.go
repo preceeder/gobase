@@ -213,7 +213,7 @@ func (s ShuMei) textLangHandler(lang string) string {
 }
 
 // 同步 图片检查
-func (s ShuMei) AsyncImage(ctx utils.Context, p ShumeiAsyncImage) (bool, *PublicShortResponse) {
+func (s ShuMei) AsyncImage(ctx utils.Context, p ShumeiAsyncImage) (bool, *PublicLongResponse) {
 	turl := s.ShumeiUrl.ImageUrl //  "http://api-img-sh.fengkongcloud.com/image/v4"
 
 	data := map[string]interface{}{
@@ -244,7 +244,7 @@ func (s ShuMei) AsyncImage(ctx utils.Context, p ShumeiAsyncImage) (bool, *Public
 		"callback":     p.CallBaskUrl,
 	}
 
-	res := &PublicShortResponse{}
+	res := &PublicLongResponse{}
 	_, err := s.Send(turl, payload, res)
 	if err != nil {
 		slog.Error("shumei image request", "error", err.Error(), "requestId", ctx.RequestId)
