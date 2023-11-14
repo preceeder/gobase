@@ -56,7 +56,6 @@ type ShumeiAsyncVideoFile struct {
 	VideoType      string
 	VoiceType      string
 	EventId        string
-	Callback       string
 	Lang           string
 	ThroughParams  map[string]any
 }

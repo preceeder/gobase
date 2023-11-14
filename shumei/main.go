@@ -35,6 +35,7 @@ type ShumeiUrl struct {
 	AsyncVoiceUrl         string `json:"asyncVoiceUrl"`         // 异步语音文件检查的数美url
 	AsyncVoiceCallBackUrl string `json:"asyncVoiceCallBackUrl"` // 异步语音文件检查回调url
 	AsyncVideoUrl         string `json:"asyncVideoUrl"`         // 视频文件检查的数美url
+	AsyncVideoCallBackUrl string `json:"asyncVideoCallBackUrl"` // 视频文件检查回调url
 	VoiceStreamUrl        string `json:"voiceStreamUrl"`        // 音频流检查url
 	VideoStreamUrl        string `json:"videoStreamUrl"`        // 视频流检查url
 }
@@ -435,6 +436,7 @@ func (s ShuMei) AsyncVideoFile(ctx utils.Context, p ShumeiAsyncVideoFile) bool {
 	if p.EventId == "" {
 		p.EventId = "default"
 	}
+
 	if p.VideoType == "" {
 		p.VideoType = s.DefaultVideoType
 	}
@@ -449,7 +451,7 @@ func (s ShuMei) AsyncVideoFile(ctx utils.Context, p ShumeiAsyncVideoFile) bool {
 		"eventId":   p.EventId,
 		"imgType":   p.VideoType,
 		"audioType": p.VoiceType,
-		"callback":  p.Callback,
+		"callback":  s.ShumeiUrl.AsyncVideoCallBackUrl,
 		"data":      data,
 	}
 	res := &VideoFileResponse{}
