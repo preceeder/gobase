@@ -27,15 +27,16 @@ var textLangSet = mapset.NewSet("zh", "en", "ar", "hi", "es", "fr", "ru", "pt", 
 var voiceLangSet = mapset.NewSet("zh", "en", "ar", "hi", "es", "fr", "ru", "pt", "id", "de", "ja", "tr", "vi", "it", "th", "tl", "ko", "ms")
 
 type ShumeiUrl struct {
-	VideoStreamCloseUrl string `json:"videoStreamCloseUrl"` // 视频流检查关闭的数美url
-	VoiceStreamCloseUrl string `json:"voiceStreamCLoseUrl"` // 语音流检查关闭的数美url
-	ImageUrl            string `json:"imageUrl"`            // 同步图片的检查的数美url
-	TextUrl             string `json:"textUrl"`             // 文本检查的数美url
-	VoiceUrl            string `json:"voiceUrl"`            // 语音文件检查的数美url
-	AsyncVoiceUrl       string `json:"asyncVoiceUrl"`       // 异步语音文件检查的数美url
-	AsyncVideoUrl       string `json:"asyncVideoUrl"`       // 视频文件检查的数美url
-	VoiceStreamUrl      string `json:"voiceStreamUrl"`      // 音频流检查url
-	VideoStreamUrl      string `json:"videoStreamUrl"`      // 视频流检查url
+	VideoStreamCloseUrl   string `json:"videoStreamCloseUrl"`   // 视频流检查关闭的数美url
+	VoiceStreamCloseUrl   string `json:"voiceStreamCLoseUrl"`   // 语音流检查关闭的数美url
+	ImageUrl              string `json:"imageUrl"`              // 同步图片的检查的数美url
+	TextUrl               string `json:"textUrl"`               // 文本检查的数美url
+	VoiceUrl              string `json:"voiceUrl"`              // 语音文件检查的数美url
+	AsyncVoiceUrl         string `json:"asyncVoiceUrl"`         // 异步语音文件检查的数美url
+	AsyncVoiceCallBackUrl string `json:"asyncVoiceCallBackUrl"` // 异步语音文件检查回调url
+	AsyncVideoUrl         string `json:"asyncVideoUrl"`         // 视频文件检查的数美url
+	VoiceStreamUrl        string `json:"voiceStreamUrl"`        // 音频流检查url
+	VideoStreamUrl        string `json:"videoStreamUrl"`        // 视频流检查url
 }
 type ShumeiConfig struct {
 	AppId          string    `json:"appid"`
@@ -383,7 +384,7 @@ func (s ShuMei) AsyncVoiceFile(ctx utils.Context, p ShumeiVoiceFile) bool {
 		"tokenId": s.tokenHandler(p.UserId),
 		"lang":    s.voiceLangeHandler(p.Lang),
 	}
-	if len(p.CallbackParams) > 0 && p.Callback != "" {
+	if len(p.CallbackParams) > 0 && p.NeedCallback {
 		data["passThrough"] = p.CallbackParams
 	}
 	if p.EventId == "" {
@@ -403,8 +404,8 @@ func (s ShuMei) AsyncVoiceFile(ctx utils.Context, p ShumeiVoiceFile) bool {
 		"data":        data,
 		"btId":        utils.GenterWithoutRepetitionStr(16),
 	}
-	if p.Callback != "" {
-		payload["callback"] = p.Callback
+	if p.NeedCallback {
+		payload["callback"] = s.ShumeiUrl.AsyncVoiceCallBackUrl
 	}
 
 	res := &PublicShortResponse{}
