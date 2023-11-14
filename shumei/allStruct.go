@@ -43,8 +43,9 @@ type ShumeiVoiceFile struct {
 	ReceiveTokenId string
 	MType          string
 	EventId        string
-	Callback       string // 异步回调需要
-	Lang           string // 异步回调需要
+	Callback       string         // 异步回调需要
+	Lang           string         // 异步回调需要
+	CallbackParams map[string]any // 异步回调需要
 }
 
 // 只有异步

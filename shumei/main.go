@@ -383,7 +383,9 @@ func (s ShuMei) AsyncVoiceFile(ctx utils.Context, p ShumeiVoiceFile) bool {
 		"tokenId": s.tokenHandler(p.UserId),
 		"lang":    s.voiceLangeHandler(p.Lang),
 	}
-
+	if len(p.CallbackParams) > 0 && p.Callback != "" {
+		data["passThrough"] = p.CallbackParams
+	}
 	if p.EventId == "" {
 		p.EventId = "default"
 	}
@@ -400,6 +402,9 @@ func (s ShuMei) AsyncVoiceFile(ctx utils.Context, p ShumeiVoiceFile) bool {
 		"content":     p.VoiceUrl,
 		"data":        data,
 		"btId":        utils.GenterWithoutRepetitionStr(16),
+	}
+	if p.Callback != "" {
+		payload["callback"] = p.Callback
 	}
 
 	res := &PublicShortResponse{}
