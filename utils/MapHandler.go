@@ -32,11 +32,12 @@ func MapToStructWithMeta(input any, output any) (md mapstructure.Metadata) {
 
 // map 转为 strcut 使用 strcut 指定的tag
 // tag 一般都是 "json"
-func MapToStructWithTag(input any, output any, tag string) error {
+func MapToStructWithTag(input any, output any, tag string, weaklyTypedInput bool) error {
 	config := &mapstructure.DecoderConfig{
-		Metadata: nil,
-		Result:   output,
-		TagName:  tag,
+		Metadata:         nil,
+		Result:           output,
+		TagName:          tag,
+		WeaklyTypedInput: weaklyTypedInput, // []uint8  需要 处理为 string 类型 的就需要为true
 	}
 	decoder, err := mapstructure.NewDecoder(config)
 	if err != nil {
