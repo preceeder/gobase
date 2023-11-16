@@ -26,7 +26,6 @@ package mysqlDb
 
 import (
 	"fmt"
-	"github.com/bytedance/sonic"
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/go-mysql-org/go-mysql/canal"
 	"github.com/preceeder/gobase/utils"
@@ -107,7 +106,6 @@ func (h *EventHandler) OnRow(e *canal.RowsEvent) error {
 	for i, v := range e.Table.Columns {
 		columsName[i] = v.Name
 		if v.Type == 3 {
-			//fmt.Printf("Enumvalues %s %#v\n", v.Name, v.EnumValues)
 			EnumMap[i] = make([]string, 0)
 			EnumMap[i] = append(append(EnumMap[i], ""), v.EnumValues...)
 		}
@@ -120,10 +118,11 @@ func (h *EventHandler) OnRow(e *canal.RowsEvent) error {
 			}
 		}
 		data, _ := utils.SliceToMap(columsName, edata)
-		dd, _ := sonic.ConfigFastest.Marshal(data)
+		//dd, _ := sonic.Marshal(data)   // 使用json 处理 []uint8 的数据会有问题
 		if ok {
 			table := reflect.New(v.Table).Interface()
-			err := sonic.ConfigFastest.Unmarshal(dd, table)
+			err := utils.MapToStructWithTag(data, table, "json", true)
+			//err := sonic.UnmarshalString(dd, table)
 			if err != nil {
 				slog.Error("binlog error", "error", err.Error())
 			}

@@ -24,7 +24,7 @@ func SliceToString[T int | string | float64 | float32 | byte](arr []T) (result s
 	return
 }
 
-func SliceToMap[K ~string | ~int, V any | ~string | ~int](k []K, v []V) (map[K]V, error) {
+func SliceToMap[K ~string | ~int, V any | ~string | ~int | ~uint8](k []K, v []V) (map[K]V, error) {
 	if len(k) > len(v) {
 		return nil, errors.New("k len lt v len")
 	}
