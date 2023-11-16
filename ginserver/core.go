@@ -45,6 +45,13 @@ func (c GContext) GetBody(obj any) {
 	}
 }
 
+func (c GContext) GetQuery(obj any) {
+	err := c.Context.ShouldBindQuery(obj)
+	if err != nil {
+		panic(BaseHttpError{Code: StatusCodeCommonErr, ErrorCode: CodeParameterError, Message: "Parameter abnormality"})
+	}
+}
+
 func (c GContext) QueryInt(key string) (int, error) {
 	kd, err := strconv.Atoi(c.Query(key))
 	return kd, err
