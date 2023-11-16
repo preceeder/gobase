@@ -16,6 +16,7 @@ import (
 type Config struct {
 	AccessKey string `json:"accessKey"`
 	SecretKey string `json:"secretKey"`
+	AppId     string `json:"appId"`
 	Region    string `json:"region"` // 华北 cn-north-1 | 新加坡 ap-singapore-1 | 美国 us-east-1
 }
 
