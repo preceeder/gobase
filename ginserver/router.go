@@ -185,25 +185,37 @@ func apiConfig(data any) (apiData ApiRouteConfig) {
 }
 
 func subApiconfigPares(config []ApiRouterSubConfig, module string) (path string, middlewares []gin.HandlerFunc, needBasePrifix bool) {
-	needBasePrifix = true
+	needBasePrifix = false
 	lc := len(config)
 	path = ""
+	pathModel := ""
 	if lc > 0 {
 		for i := 0; i < lc; i++ {
 			bp, _ := config[i].NoUseBasePrefixPath.(bool)
-			if config[i].NoUseBasePrefixPath == nil || bp == false {
-				//path += BasePrefixPath
-				needBasePrifix = false
+			if config[i].NoUseBasePrefixPath != nil {
+				if bp == true {
+					//path += BasePrefixPath
+					needBasePrifix = true
+				}
 				break
 			}
 		}
 		for i := 0; i < lc; i++ {
 			nm, _ := config[i].NoUseModel.(bool)
-			if config[i].NoUseModel == nil || nm == false {
-				path += "/" + module
+			if config[i].NoUseModel != nil {
+				if nm == false {
+					pathModel = module
+					//path += "/" + module
+				} else {
+					pathModel = ""
+				}
 				break
+			} else {
+				pathModel = module
+				//path += "/" + module
 			}
 		}
+
 		for i := 0; i < lc; i++ {
 			if config[i].Path != nil {
 				pt, _ := config[i].Path.(string)
@@ -215,19 +227,22 @@ func subApiconfigPares(config []ApiRouterSubConfig, module string) (path string,
 		}
 
 		for i := 0; i < lc; i++ {
-			if config[i].Middlewares != nil {
-				middlewares = append(middlewares, config[i].Middlewares...)
+			// 优先执行 all的中间件, 然后在执行 私有的 中间件
+			if config[lc-1-i].Middlewares != nil {
+				middlewares = append(middlewares, config[lc-1-i].Middlewares...)
 				break
 			}
 		}
 	} else {
 		needBasePrifix = false
 		//path += "/" + BasePrefixPath + "/" + module
-		path += "/" + module
+		//path += "/" + module
+		pathModel = module
 
 	}
 
 	var pathSlice []string
+	path = pathModel + path
 	for _, v := range strings.Split(path, "/") {
 		if v != "" {
 			pathSlice = append(pathSlice, v)
@@ -280,8 +295,8 @@ func PdHandler(apiData ApiRouteConfig, module string) map[string][]PW {
 				if ac != nil {
 					temp = append(temp, *ac)
 				}
-				path, middlewares, needBasePrifix := subApiconfigPares(temp, module)
-				sd[funname] = append(sd[funname], PW{Path: path, Middlewares: middlewares, HttpMethod: v, NoUseBasePrefixPath: needBasePrifix})
+				path, middlewares, noUseBasePrifix := subApiconfigPares(temp, module)
+				sd[funname] = append(sd[funname], PW{Path: path, Middlewares: middlewares, HttpMethod: v, NoUseBasePrefixPath: noUseBasePrifix})
 			}
 		}
 		if _, ok := sd[k]; !ok {
@@ -289,8 +304,8 @@ func PdHandler(apiData ApiRouteConfig, module string) map[string][]PW {
 			if ac != nil {
 				temp = append(temp, *ac)
 			}
-			path, middlewares, needBasePrifix := subApiconfigPares(temp, module)
-			sd[k] = append(sd[k], PW{Path: path, Middlewares: middlewares, HttpMethod: v, NoUseBasePrefixPath: needBasePrifix})
+			path, middlewares, noUseBasePrifix := subApiconfigPares(temp, module)
+			sd[k] = append(sd[k], PW{Path: path, Middlewares: middlewares, HttpMethod: v, NoUseBasePrefixPath: noUseBasePrifix})
 			//sd[k] = PW{Path: path, Middlewares: middlewares, HttpMethod: v}
 		}
 	}
