@@ -168,3 +168,15 @@ func (i *NullByte) Scan(src any) error {
 	err := convertAssign(i, src)
 	return err
 }
+
+type NullFloat64 float64
+
+func (i *NullFloat64) Scan(src any) error {
+	if src == nil {
+		*i = 0
+		return nil
+	}
+	err := convertAssign(i, src)
+
+	return err
+}
