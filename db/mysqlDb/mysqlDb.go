@@ -196,9 +196,9 @@ func (s Sdb) Update(ctx utils.Context, params map[string]any, tx ...*sqlx.Tx) in
 	for k, v := range setValues {
 		tpv := ""
 		if vt, ok := v.([]string); ok {
-			tpv = k + " = " + vt[0]
+			tpv = "`" + k + "`" + " = " + vt[0]
 		} else {
-			tpv = k + "=" + " :" + k
+			tpv = "`" + k + "`" + "=" + " :" + k
 			tempParams[k] = v
 		}
 		setL = append(setL, tpv)
@@ -347,16 +347,16 @@ func (s Sdb) InsertUpdate(ctx utils.Context, params map[string]any, tx ...*sqlx.
 		for k, v := range uValues {
 			tpv := ""
 			if vt, ok := v.([]string); ok {
-				tpv = k + " = " + vt[0]
+				tpv = "`" + k + "`" + " = " + vt[0]
 			} else {
-				tpv = k + "=values(" + k + ")"
+				tpv = "`" + k + "`" + "=values(`" + k + "`)"
 			}
 			UpdateL = append(UpdateL, tpv)
 		}
 	} else if uValues, ok := params["Update"].([]string); ok {
 		for _, name := range uValues {
 			tpv := ""
-			tpv = "`" + name + "`" + "=values(" + name + ")"
+			tpv = "`" + name + "`" + "=values(`" + name + "`)"
 			UpdateL = append(UpdateL, tpv)
 		}
 	}

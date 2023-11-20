@@ -5,8 +5,10 @@ go 1.21.0
 require (
 	github.com/alibabacloud-go/darabonba-number v1.0.4
 	github.com/alibabacloud-go/darabonba-openapi/v2 v2.0.2
+	github.com/alibabacloud-go/facebody-20191230/v4 v4.0.8
 	github.com/alibabacloud-go/push-20160801/v2 v2.0.2
 	github.com/alibabacloud-go/tea v1.1.19
+	github.com/alibabacloud-go/tea-utils/v2 v2.0.1
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.9+incompatible
 	github.com/bytedance/sonic v1.10.0
 	github.com/deckarep/golang-set v1.8.0
@@ -28,7 +30,9 @@ require (
 	github.com/spf13/viper v1.16.0
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.0
+	github.com/volcengine/volc-sdk-golang v1.0.124
 	github.com/zegoim/zego_server_assistant/token/go/src v0.0.0-20230404083002-eded8bcecc63
+	golang.org/x/exp v0.0.0-20221208152030-732eee02a75a
 	golang.org/x/net v0.14.0
 	google.golang.org/api v0.138.0
 	google.golang.org/grpc v1.57.0
@@ -46,12 +50,16 @@ require (
 	github.com/alibabacloud-go/debug v0.0.0-20190504072949-9472017b5c68 // indirect
 	github.com/alibabacloud-go/endpoint-util v1.1.0 // indirect
 	github.com/alibabacloud-go/openapi-util v0.1.0 // indirect
-	github.com/alibabacloud-go/tea-utils v1.3.1 // indirect
-	github.com/alibabacloud-go/tea-utils/v2 v2.0.1 // indirect
+	github.com/alibabacloud-go/openplatform-20191219/v2 v2.0.1 // indirect
+	github.com/alibabacloud-go/tea-fileform v1.1.1 // indirect
+	github.com/alibabacloud-go/tea-oss-sdk v1.1.3 // indirect
+	github.com/alibabacloud-go/tea-oss-utils v1.1.0 // indirect
+	github.com/alibabacloud-go/tea-utils v1.3.6 // indirect
 	github.com/alibabacloud-go/tea-xml v1.1.2 // indirect
 	github.com/aliyun/credentials-go v1.1.2 // indirect
 	github.com/astaxie/beego v1.12.0 // indirect
 	github.com/benbjohnson/clock v1.1.0 // indirect
+	github.com/cenkalti/backoff/v4 v4.1.2 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
 	github.com/chenzhuoyu/iasm v0.9.0 // indirect
@@ -100,14 +108,12 @@ require (
 	github.com/tjfoc/gmsm v1.3.2 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
-	github.com/volcengine/volc-sdk-golang v1.0.124 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.21.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
 	golang.org/x/crypto v0.12.0 // indirect
-	golang.org/x/exp v0.0.0-20221208152030-732eee02a75a // indirect
 	golang.org/x/oauth2 v0.11.0 // indirect
 	golang.org/x/sys v0.11.0 // indirect
 	golang.org/x/text v0.12.0 // indirect
