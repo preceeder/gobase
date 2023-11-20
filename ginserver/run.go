@@ -19,7 +19,7 @@ func Run(r *gin.Engine, srvName string, addr string, stop func()) {
 	}
 	//保证下面的优雅启停
 	go func() {
-		slog.Info("server running in ", "serverName", srvName, "addr", "http://"+srv.Addr)
+		slog.Info("server running in ", "serverName", srvName, "addr", "http://"+srv.Addr, "swag", "http://"+srv.Addr+"/swagger/index.html")
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			slog.Error(err.Error())
 		} else {

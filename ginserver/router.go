@@ -357,7 +357,7 @@ func match(path string, route Route) gin.HandlerFunc {
 			//c.BindHeader(DefaultHeader{})
 			ctl := &GContext{
 				Context:   c,
-				RequestId: c.GetString("requestId"),
+				RequestId: requestId,
 				UContext:  utils.Context{RequestId: requestId},
 				UserId:    c.GetString("userId"),
 			}
