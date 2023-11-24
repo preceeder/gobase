@@ -21,9 +21,8 @@ var TencentFaceClient *TencentFace
 var TencentFaceConfig tencentFaceConfig
 
 type tencentFaceConfig struct {
-	AppId          string `json:"appId"`
-	ServerSecret   string `json:"serverSecret"`
-	CallBackSecret string `json:"callbackSecret"`
+	AppId        string `json:"appId"`
+	ServerSecret string `json:"serverSecret"`
 }
 
 func InitWithViper(config viper.Viper) {
