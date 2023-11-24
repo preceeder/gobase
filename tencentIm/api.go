@@ -9,6 +9,7 @@ package tencentIm
 import (
 	"errors"
 	"fmt"
+	"github.com/bytedance/sonic"
 	"github.com/preceeder/gobase/utils"
 	"golang.org/x/exp/rand"
 	"log/slog"
@@ -26,7 +27,7 @@ import (
  *params syncOtherMachine int   1：把消息同步到 From_Account 在线终端和漫游上; 2：消息不同步至 From_Account; 若不填写默认情况下会将消息存 From_Account 漫游
  *params offLineData OfflinePushInfo 离线消息
 */
-func SendImMessage(ctx utils.Context, fromId string, toId string, content MsgContent, cloudCustomData string,
+func SendImMessage(ctx utils.Context, fromId string, toId string, content MsgContent, cloudCustomData any,
 	sendMsgControl []string, forbidCallbackControl []string, syncOtherMachine int,
 	offLineData *OfflinePushInfo, res BaseResponse) error {
 
@@ -35,6 +36,10 @@ func SendImMessage(ctx utils.Context, fromId string, toId string, content MsgCon
 	}
 	// 随机字符串
 	var randInt = rand.New(rand.NewSource(uint64(time.Now().UnixNano())))
+	var cloudCustomDataStr string
+	if cloudCustomData != nil {
+		cloudCustomDataStr, _ = sonic.ConfigFastest.MarshalToString(cloudCustomData)
+	}
 
 	var message = Message{
 		SyncOtherMachine:      syncOtherMachine,
@@ -44,7 +49,7 @@ func SendImMessage(ctx utils.Context, fromId string, toId string, content MsgCon
 		MsgRandom:             randInt.Intn(1000000),
 		ForbidCallbackControl: forbidCallbackControl,
 		SendMsgControl:        sendMsgControl,
-		CloudCustomData:       cloudCustomData,
+		CloudCustomData:       cloudCustomDataStr,
 		OfflinePushInfo:       offLineData,
 		MsgBody:               []MsgBody{{MsgType: content.GetMsgType(), MsgContent: content}},
 	}

@@ -1,7 +1,6 @@
 package ginserver
 
 import (
-	"fmt"
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/preceeder/gobase/try"
@@ -43,7 +42,6 @@ func GinLogger(serverLogHide bool) gin.HandlerFunc {
 		c.Next()
 
 		cost := time.Since(start)
-		fmt.Println(serverLogHide)
 		if !serverLogHide {
 			slog.Info("",
 				"method", c.Request.Method,

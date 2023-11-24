@@ -59,8 +59,9 @@ type ApiRouterSubConfig struct {
 	FuncName            any // func or string
 	Path                any // string
 	Middlewares         []gin.HandlerFunc
-	NoUseModel          any // uri 是否使用model 名   bool
-	NoUseBasePrefixPath any // 是否禁用 BasePrefixPathInvalid   bool
+	NoUseAllConfig      bool // 是否禁用全局配置  ALL的配置
+	NoUseModel          any  // uri 是否使用model 名   bool
+	NoUseBasePrefixPath any  // 是否禁用 BasePrefixPathInvalid   bool
 }
 
 // 路由的前缀
@@ -292,7 +293,7 @@ func PdHandler(apiData ApiRouteConfig, module string) map[string][]PW {
 					}
 				}
 				temp := []ApiRouterSubConfig{vl}
-				if ac != nil {
+				if ac != nil && !vl.NoUseAllConfig {
 					temp = append(temp, *ac)
 				}
 				path, middlewares, noUseBasePrifix := subApiconfigPares(temp, module)
@@ -357,7 +358,7 @@ func match(path string, route Route) gin.HandlerFunc {
 			//c.BindHeader(DefaultHeader{})
 			ctl := &GContext{
 				Context:   c,
-				RequestId: c.GetString("requestId"),
+				RequestId: requestId,
 				UContext:  utils.Context{RequestId: requestId},
 				UserId:    c.GetString("userId"),
 			}

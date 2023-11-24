@@ -14,6 +14,7 @@ import (
 )
 
 type Config struct {
+	AppKey    string `json:"appKey"` // 生成token 的时候需要
 	AccessKey string `json:"accessKey"`
 	SecretKey string `json:"secretKey"`
 	AppId     string `json:"appId"`
