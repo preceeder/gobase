@@ -28,10 +28,10 @@ type tencentFaceConfig struct {
 
 func InitWithViper(config viper.Viper) {
 	utils.ReadViperConfig(config, "tencentyun", &TencentFaceConfig)
-	InitJiGou(TencentFaceConfig.AppId, TencentFaceConfig.ServerSecret)
+	InitTencentFace(TencentFaceConfig.AppId, TencentFaceConfig.ServerSecret)
 }
 
-func InitJiGou(appid string, serverSecret string) {
+func InitTencentFace(appid string, serverSecret string) {
 	TencentFaceClient = NewTencentFaceClient(appid, serverSecret)
 }
 

@@ -24,6 +24,7 @@ import (
 	"github.com/preceeder/gobase/rongyun"
 	"github.com/preceeder/gobase/shumei"
 	"github.com/preceeder/gobase/tencentIm"
+	"github.com/preceeder/gobase/tencentyun"
 	"github.com/preceeder/gobase/volc"
 
 	"github.com/spf13/viper"
@@ -41,6 +42,7 @@ type initOptional struct {
 	WithNsqConsumer bool
 	WithNsqProducer bool
 	WithVocl        bool
+	WithTencentYun  bool
 }
 
 func WithGinOptional(c bool) func(*initOptional, viper.Viper) {
@@ -175,6 +177,15 @@ func WithVolcOptional(c bool) func(optional *initOptional, viper2 viper.Viper) {
 		il.WithVocl = c
 		if c == true {
 			volc.InitWithViper(config)
+		}
+	}
+}
+
+func WithTencentYunOptional(c bool) func(optional *initOptional, viper2 viper.Viper) {
+	return func(il *initOptional, config viper.Viper) {
+		il.WithTencentYun = c
+		if c == true {
+			tencentyun.InitWithViper(config)
 		}
 	}
 }
