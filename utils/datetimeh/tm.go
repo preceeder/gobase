@@ -101,9 +101,16 @@ func HourNextSecond(zone ...string) int64 {
 	return remainTime
 }
 
-// 获取本月的剩余时间
+// 时间戳转化为时间类型
 func ConvertTimestampToDateTime(timestamp int64, zone ...string) carbon.Carbon {
 	cab := timeZoneHandler(zone...)
 	cab = cab.CreateFromTimestamp(timestamp, zone...)
+	return cab
+}
+
+// 时间string化为时间类型
+func ConvertStrToDateTime(datetime string, zone ...string) carbon.Carbon {
+	cab := timeZoneHandler(zone...)
+	cab = cab.ParseByLayout(datetime, "2006-1-2 15:4:5", zone...)
 	return cab
 }
