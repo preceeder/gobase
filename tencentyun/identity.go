@@ -24,7 +24,7 @@ func InitTencentFaceId(appid string, serverSecret string) {
 	FaceIdClient, _ = v20180301.NewClient(credential, regions.Shanghai, cpf)
 }
 
-func Identity(ctx utils.Context, name string, idCard string) string {
+func Identity(ctx utils.Context, name string, idCard string) (string, string) {
 
 	//创建common client
 	m := map[string]string{"IdCard": idCard, "name": name}
@@ -34,7 +34,7 @@ func Identity(ctx utils.Context, name string, idCard string) string {
 	cardVerification, err := FaceIdClient.IdCardVerification(&request)
 	if err != nil {
 		slog.Error("访问身份二要素检查接口失败", "errors", err.Error(), "requestId", ctx.RequestId)
-		return ""
+		return "", "服务异常"
 	}
-	return *cardVerification.Response.Result
+	return *cardVerification.Response.Result, *cardVerification.Response.Description
 }
