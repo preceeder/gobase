@@ -28,6 +28,7 @@ type tencentFaceConfig struct {
 func InitWithViper(config viper.Viper) {
 	utils.ReadViperConfig(config, "tencentyun", &TencentFaceConfig)
 	InitTencentFace(TencentFaceConfig.AppId, TencentFaceConfig.ServerSecret)
+	InitTencentFaceId(TencentFaceConfig.AppId, TencentFaceConfig.ServerSecret)
 }
 
 func InitTencentFace(appid string, serverSecret string) {
