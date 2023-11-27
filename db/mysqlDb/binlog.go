@@ -121,7 +121,7 @@ func (h *EventHandler) OnRow(e *canal.RowsEvent) error {
 		//dd, _ := sonic.Marshal(data)   // 使用json 处理 []uint8 的数据会有问题
 		if ok {
 			table := reflect.New(v.Table).Interface()
-			err := utils.MapToStructWithTag(data, table, "json", true)
+			err := utils.MapStructConvertWithTag(data, table, "json", true)
 			//err := sonic.UnmarshalString(dd, table)
 			if err != nil {
 				slog.Error("binlog error", "error", err.Error())
