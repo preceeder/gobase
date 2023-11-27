@@ -18,7 +18,7 @@ func InitTencentFaceId(appid string, serverSecret string) {
 		os.Getenv(appid),
 		os.Getenv(serverSecret))
 	cpf := profile.NewClientProfile()
-	cpf.HttpProfile.Endpoint = "cvm.tencentcloudapi.com"
+	cpf.HttpProfile.Endpoint = "faceid.tencentcloudapi.com"
 	cpf.HttpProfile.ReqMethod = "POST"
 
 	FaceIdClient, _ = v20180301.NewClient(credential, regions.Shanghai, cpf)
