@@ -64,6 +64,7 @@ func CreateClient(accessKeyId string, accessKeySecret string, endpoint string, r
 		AccessKeyId:     config.AccessKeyId,
 		AccessKeySecret: config.AccessKeySecret,
 		SecurityToken:   config.SecurityToken,
+		Type:            tea.String("access_key"),
 	}
 	// If you have any questions, please refer to it https://github.com/aliyun/credentials-go/blob/master/README-CN.md
 	cred, err := credential.NewCredential(credentialConfig)
