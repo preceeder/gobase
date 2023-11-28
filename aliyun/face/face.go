@@ -1,10 +1,11 @@
 package face
 
 import (
-	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
-	facebody "github.com/alibabacloud-go/facebody-20191230/v4/client"
-	util "github.com/alibabacloud-go/tea-utils/v2/service"
+	facebody "github.com/alibabacloud-go/facebody-20191230/client"
+	rpc "github.com/alibabacloud-go/tea-rpc/client"
+	util "github.com/alibabacloud-go/tea-utils/service"
 	"github.com/alibabacloud-go/tea/tea"
+	credential "github.com/aliyun/credentials-go/credentials"
 	"github.com/preceeder/gobase/utils"
 	"github.com/spf13/viper"
 	"log/slog"
@@ -31,7 +32,7 @@ func InitWithViper(config viper.Viper) {
 	//aliConfig := readAliPushConfig(config)
 	cnf := ALFaceConfig{}
 	utils.ReadViperConfig(config, "ali_face", &cnf)
-	client, err := CreateClient(&(cnf.KeyId), &(cnf.Secret), &(cnf.EndPoint), &(cnf.RegionId))
+	client, err := CreateClient(cnf.KeyId, cnf.Secret, cnf.EndPoint, cnf.RegionId)
 	if err != nil {
 		return
 	}
@@ -49,16 +50,35 @@ func InitWithViper(config viper.Viper) {
  * @return Client
  * @throws Exception
  */
-func CreateClient(accessKeyId *string, accessKeySecret *string, endpoint *string, regionId *string) (_result *facebody.Client, _err error) {
-	config := &openapi.Config{
-		AccessKeyId:     accessKeyId,
-		AccessKeySecret: accessKeySecret,
-		RegionId:        regionId,
+func CreateClient(accessKeyId string, accessKeySecret string, endpoint string, regionId string) (_result *facebody.Client, _err error) {
+	config := new(rpc.Config)
+
+	// init config with ak
+	config.SetAccessKeyId(accessKeyId).
+		SetAccessKeySecret(accessKeySecret).
+		SetRegionId(regionId).
+		SetEndpoint(endpoint)
+
+	// init config with credential
+	credentialConfig := &credential.Config{
+		AccessKeyId:     config.AccessKeyId,
+		AccessKeySecret: config.AccessKeySecret,
+		SecurityToken:   config.SecurityToken,
 	}
-	config.Endpoint = endpoint
-	_result = &facebody.Client{}
-	_result, _err = facebody.NewClient(config)
-	return _result, _err
+	// If you have any questions, please refer to it https://github.com/aliyun/credentials-go/blob/master/README-CN.md
+	cred, err := credential.NewCredential(credentialConfig)
+	if err != nil {
+		panic(err)
+	}
+	config.SetCredential(cred).
+		SetEndpoint("facebody.cn-hangzhou.aliyuncs.com")
+
+	// init client
+	client, err := facebody.NewClient(config)
+	if err != nil {
+		panic(err)
+	}
+	return client, _err
 }
 
 func (alfc ALFaceClientStruct) CompareFace(ctx utils.Context, imageUrlA string, imageUrlB string) *facebody.CompareFaceResponse {
@@ -67,7 +87,7 @@ func (alfc ALFaceClientStruct) CompareFace(ctx utils.Context, imageUrlA string, 
 		ImageURLB: tea.String(imageUrlB),
 	}
 	runtime := &util.RuntimeOptions{}
-	compareFaceResponse, err := alfc.Client.CompareFaceWithOptions(compareFaceRequest, runtime)
+	compareFaceResponse, err := alfc.Client.CompareFace(compareFaceRequest, runtime)
 	if err != nil {
 		// 获取整体报错信息
 		slog.Error("人脸比较接口访问失败", "errors", err.Error(), "requestId", ctx.RequestId)
@@ -83,7 +103,7 @@ func (alfc ALFaceClientStruct) RecognizeFac(ctx utils.Context, imageUrl string) 
 		ImageURL: tea.String(imageUrl),
 	}
 	runtime := &util.RuntimeOptions{}
-	recognizeFaceResponse, err := alfc.Client.RecognizeFaceWithOptions(recognizeFaceRequest, runtime)
+	recognizeFaceResponse, err := alfc.Client.RecognizeFace(recognizeFaceRequest, runtime)
 	if err != nil {
 		// 获取整体报错信息
 		slog.Error("人脸属性识别接口访问失败", "errors", err.Error(), "requestId", ctx.RequestId)
