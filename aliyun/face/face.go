@@ -31,7 +31,7 @@ func InitWithViper(config viper.Viper) {
 	//aliConfig := readAliPushConfig(config)
 	cnf := ALFaceConfig{}
 	utils.ReadViperConfig(config, "ali_face", &cnf)
-	client, err := CreateClient(&(cnf.KeyId), &(cnf.Secret), &(cnf.EndPoint))
+	client, err := CreateClient(&(cnf.KeyId), &(cnf.Secret), &(cnf.EndPoint), &(cnf.RegionId))
 	if err != nil {
 		return
 	}
@@ -49,10 +49,11 @@ func InitWithViper(config viper.Viper) {
  * @return Client
  * @throws Exception
  */
-func CreateClient(accessKeyId *string, accessKeySecret *string, endpoint *string) (_result *facebody.Client, _err error) {
+func CreateClient(accessKeyId *string, accessKeySecret *string, endpoint *string, regionId *string) (_result *facebody.Client, _err error) {
 	config := &openapi.Config{
 		AccessKeyId:     accessKeyId,
 		AccessKeySecret: accessKeySecret,
+		RegionId:        regionId,
 	}
 	config.Endpoint = endpoint
 	_result = &facebody.Client{}
