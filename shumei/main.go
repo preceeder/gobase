@@ -478,23 +478,20 @@ func (s ShuMei) HandlerCallBackUrl(urlStr string) string {
 // 音频流检查
 func (s ShuMei) AudioStream(ctx utils.Context, p ShumeiAsyncAudioStream) (bool, *AudioStreamResponse) {
 	turl := s.ShumeiUrl.VoiceStreamUrl //"http://api-audiostream-sh.fengkongcloud.com/audiostream/v4"
-
 	data := map[string]interface{}{
-		"tokenId":    s.tokenHandler(p.UserId),
-		"lang":       s.voiceLangeHandler(p.Lang),
-		"btId":       utils.GenterWithoutRepetitionStr(16),
-		"streamType": s.StreamType,
-		"zegoParam": map[string]any{
-			"tokenId":  p.TokenId,
-			"streamId": p.StreamId,
-			"roomId":   p.RoomId,
-			"testEnv":  p.TestEnv, /// 使用正式环境
-		},
+		"tokenId":          s.tokenHandler(p.UserId),
+		"lang":             s.voiceLangeHandler(p.Lang),
+		"btId":             utils.GenterWithoutRepetitionStr(16),
+		"streamType":       s.StreamType,
 		"returnAllText":    p.ReturnAllText,
 		"room":             p.RoomId,
 		"returnFinishInfo": 1,
 		"audioDetectStep":  p.AudioDetectStep,
 		"extra":            map[string]any{"passThrough": p.ThroughParams},
+	}
+
+	for k, v := range p.RtcParams {
+		data[k] = v
 	}
 
 	if p.EventId == "" {
@@ -535,16 +532,10 @@ func (s ShuMei) AudioStream(ctx utils.Context, p ShumeiAsyncAudioStream) (bool, 
 func (s ShuMei) VideoStream(ctx utils.Context, p ShumeiAsyncVideoStream) (bool, *AudioStreamResponse) {
 	turl := s.ShumeiUrl.VideoStreamUrl //"http://api-videostream-sh.fengkongcloud.com/videostream/v4"
 	data := map[string]interface{}{
-		"tokenId":    s.tokenHandler(p.UserId),
-		"lang":       s.imageLangHandler(p.Lang),
-		"btId":       utils.GenterWithoutRepetitionStr(16),
-		"streamType": s.StreamType,
-		"zegoParam": map[string]any{
-			"tokenId":  p.TokenId,
-			"streamId": p.StreamId,
-			"roomId":   p.RoomId,
-			"testEnv":  p.TestEnv, /// 使用正式环境
-		},
+		"tokenId":          s.tokenHandler(p.UserId),
+		"lang":             s.imageLangHandler(p.Lang),
+		"btId":             utils.GenterWithoutRepetitionStr(16),
+		"streamType":       s.StreamType,
 		"room":             p.RoomId,
 		"returnFinishInfo": p.ReturnFinishInfo,
 		"detectFrequency":  p.DetectFrequency, // 通知的频次   秒/次
@@ -552,6 +543,10 @@ func (s ShuMei) VideoStream(ctx utils.Context, p ShumeiAsyncVideoStream) (bool, 
 		"extra": map[string]any{"passThrough": p.ThroughParams},
 	}
 
+	// rtc 参数
+	for k, v := range p.RtcParams {
+		data[k] = v
+	}
 	if p.EventId == "" {
 		p.EventId = "default"
 	}

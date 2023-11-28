@@ -62,6 +62,7 @@ type ShumeiAsyncVideoFile struct {
 
 // 只有异步
 type ShumeiAsyncAudioStream struct {
+	RtcParams       map[string]any
 	UserId          string
 	ReceiveTokenId  string
 	VoiceType       string
@@ -70,10 +71,7 @@ type ShumeiAsyncAudioStream struct {
 	Lang            string
 	AudioDetectStep int
 	RoomId          string
-	TokenId         string
-	StreamId        string
-	TestEnv         bool // 即构构环境
-	ReturnAllText   int  // 0：返回风险等级为非pass的音频片段  1：返回所有风险等级的音频片段   默认0
+	ReturnAllText   int // 0：返回风险等级为非pass的音频片段  1：返回所有风险等级的音频片段   默认0
 	ThroughParams   map[string]any
 }
 
@@ -88,11 +86,9 @@ type ShumeiAsyncVideoStream struct {
 	AudioCallback  string // 音频画面
 	//Callback       string
 	ReturnFinishInfo int
-	TestEnv          bool
 	Lang             string
+	RtcParams        map[string]any
 	RoomId           string
-	TokenId          string
-	StreamId         string
 	DetectFrequency  int // 检测频次
 	ThroughParams    map[string]any
 }

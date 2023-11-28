@@ -52,7 +52,7 @@ func TestShuMei_AsyncImage1(t *testing.T) {
 				CdnUrl:           tt.fields.BaseUrl,
 				StreamType:       tt.fields.StreamType,
 			}
-			if got := s.AsyncImage(utils.Context{}, tt.args.p); got != tt.want {
+			if got, _ := s.AsyncImage(utils.Context{}, tt.args.p); got != tt.want {
 				t.Errorf("AsyncImage() = %v, want %v", got, tt.want)
 			}
 		})
