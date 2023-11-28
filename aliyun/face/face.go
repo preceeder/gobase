@@ -9,6 +9,7 @@ import (
 	"github.com/preceeder/gobase/utils"
 	"github.com/spf13/viper"
 	"log/slog"
+	"net/http"
 )
 
 type ALFaceConfig struct {
@@ -99,11 +100,13 @@ func (alfc ALFaceClientStruct) CompareFace(ctx utils.Context, imageUrlA string, 
 }
 
 func (alfc ALFaceClientStruct) RecognizeFac(ctx utils.Context, imageUrl string) *facebody.RecognizeFaceResponse {
-	recognizeFaceRequest := &facebody.RecognizeFaceRequest{
-		ImageURL: tea.String(imageUrl),
+	httpClient := http.Client{}
+	file, _ := httpClient.Get(imageUrl)
+	recognizeFaceRequest := &facebody.RecognizeFaceAdvanceRequest{
+		ImageURLObject: file.Body,
 	}
 	runtime := &util.RuntimeOptions{}
-	recognizeFaceResponse, err := alfc.Client.RecognizeFace(recognizeFaceRequest, runtime)
+	recognizeFaceResponse, err := alfc.Client.RecognizeFaceAdvance(recognizeFaceRequest, runtime)
 	if err != nil {
 		// 获取整体报错信息
 		slog.Error("人脸属性识别接口访问失败", "errors", err.Error(), "requestId", ctx.RequestId)
