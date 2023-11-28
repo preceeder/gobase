@@ -71,8 +71,7 @@ func CreateClient(accessKeyId string, accessKeySecret string, endpoint string, r
 	if err != nil {
 		panic(err)
 	}
-	config.SetCredential(cred).
-		SetEndpoint("facebody.cn-hangzhou.aliyuncs.com")
+	config.SetCredential(cred)
 
 	// init client
 	client, err := facebody.NewClient(config)
