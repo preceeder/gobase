@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 // 随机字符串
@@ -68,4 +69,8 @@ func StrBindName(str string, args map[string]any, spacing []byte) (temPs string,
 	}
 	return temPs + str, nil
 	//fmt.Println(temPs)
+}
+
+func StringLen(str string) int {
+	return utf8.RuneCountInString(str)
 }
