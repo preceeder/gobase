@@ -1,9 +1,9 @@
 package face
 
 import (
-	facebody "github.com/alibabacloud-go/facebody-20191230/client"
-	rpc "github.com/alibabacloud-go/tea-rpc/client"
-	util "github.com/alibabacloud-go/tea-utils/service"
+	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
+	facebody "github.com/alibabacloud-go/facebody-20191230/v4/client"
+	util "github.com/alibabacloud-go/tea-utils/v2/service"
 	"github.com/alibabacloud-go/tea/tea"
 	credential "github.com/aliyun/credentials-go/credentials"
 	"github.com/preceeder/gobase/utils"
@@ -52,7 +52,7 @@ func InitWithViper(config viper.Viper) {
  * @throws Exception
  */
 func CreateClient(accessKeyId string, accessKeySecret string, endpoint string, regionId string) (_result *facebody.Client, _err error) {
-	config := new(rpc.Config)
+	config := new(openapi.Config)
 
 	// init config with ak
 	config.SetAccessKeyId(accessKeyId).
@@ -83,12 +83,15 @@ func CreateClient(accessKeyId string, accessKeySecret string, endpoint string, r
 }
 
 func (alfc ALFaceClientStruct) CompareFace(ctx utils.Context, imageUrlA string, imageUrlB string) *facebody.CompareFaceResponse {
-	compareFaceRequest := &facebody.CompareFaceRequest{
-		ImageURLA: tea.String(imageUrlA),
-		ImageURLB: tea.String(imageUrlB),
+	httpClient := http.Client{}
+	file1, _ := httpClient.Get(imageUrlA)
+	file2, _ := httpClient.Get(imageUrlB)
+	compareFaceRequest := &facebody.CompareFaceAdvanceRequest{
+		ImageURLAObject: file1.Body,
+		ImageURLBObject: file2.Body,
 	}
 	runtime := &util.RuntimeOptions{}
-	compareFaceResponse, err := alfc.Client.CompareFace(compareFaceRequest, runtime)
+	compareFaceResponse, err := alfc.Client.CompareFaceAdvance(compareFaceRequest, runtime)
 	if err != nil {
 		// 获取整体报错信息
 		slog.Error("人脸比较接口访问失败", "errors", err.Error(), "requestId", ctx.RequestId)
