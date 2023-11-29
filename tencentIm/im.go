@@ -46,6 +46,11 @@ func InitWithStruct() {
 func InitIm() {
 	ImClient = resty.New()
 	ImClient.SetTimeout(3 * time.Second)
+	ImClient.SetHeaders(map[string]string{
+		"Content-Type": "application/json",
+		"Accept":       "application/json",
+	})
+
 	ImClient.SetTransport(&http.Transport{
 		MaxIdleConnsPerHost:   50,               // 对于每个主机，保持最大空闲连接数为 10
 		IdleConnTimeout:       30 * time.Second, // 空闲连接超时时间为 30 秒

@@ -162,7 +162,7 @@ type MsgBody struct {
 	//TIMVideoFileElem（视频消息）
 	MsgType string `json:"MsgType"`
 	//对于每种 MsgType 用不同的 MsgContent 格式，具体可参考 消息格式描述
-	MsgContent MsgContent `json:"MsgContent"`
+	MsgContent any `json:"MsgContent"`
 }
 type OfflinePushInfo struct {
 	//0：表示推送

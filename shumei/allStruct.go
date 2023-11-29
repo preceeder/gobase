@@ -63,6 +63,7 @@ type ShumeiAsyncVideoFile struct {
 // 只有异步
 type ShumeiAsyncAudioStream struct {
 	RtcParams       map[string]any
+	StreamType      string // 目前默认值 ZEGO
 	UserId          string
 	ReceiveTokenId  string
 	VoiceType       string
@@ -88,6 +89,7 @@ type ShumeiAsyncVideoStream struct {
 	ReturnFinishInfo int
 	Lang             string
 	RtcParams        map[string]any
+	StreamType       string // 目前默认值 ZEGO
 	RoomId           string
 	DetectFrequency  int // 检测频次
 	ThroughParams    map[string]any

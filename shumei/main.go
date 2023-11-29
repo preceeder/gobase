@@ -79,7 +79,6 @@ type ShuMei struct {
 	HttpClient       *resty.Client
 	CdnUrl           string    // 资源的 url 最后不加 /
 	CallBackDomain   string    // 回调域名  url 最后不加 /
-	StreamType       string    // 目前默认值 ZEGO
 	ShumeiUrl        ShumeiUrl // 数美接口的urls
 }
 
@@ -108,9 +107,6 @@ func NewShuMei(appId string, accessKey string, optionals ...func(*ShuMei) error)
 	}
 	if sh.DefaultVideoType == "" {
 		sh.DefaultVideoType = "POLITY_EROTIC_ADVERT"
-	}
-	if sh.StreamType == "" {
-		sh.StreamType = "ZEGO"
 	}
 
 	return sh, nil
@@ -482,7 +478,7 @@ func (s ShuMei) AudioStream(ctx utils.Context, p ShumeiAsyncAudioStream) (bool, 
 		"tokenId":          s.tokenHandler(p.UserId),
 		"lang":             s.voiceLangeHandler(p.Lang),
 		"btId":             utils.GenterWithoutRepetitionStr(16),
-		"streamType":       s.StreamType,
+		"streamType":       p.StreamType,
 		"returnAllText":    p.ReturnAllText,
 		"room":             p.RoomId,
 		"returnFinishInfo": 1,
@@ -535,7 +531,7 @@ func (s ShuMei) VideoStream(ctx utils.Context, p ShumeiAsyncVideoStream) (bool, 
 		"tokenId":          s.tokenHandler(p.UserId),
 		"lang":             s.imageLangHandler(p.Lang),
 		"btId":             utils.GenterWithoutRepetitionStr(16),
-		"streamType":       s.StreamType,
+		"streamType":       p.StreamType,
 		"room":             p.RoomId,
 		"returnFinishInfo": p.ReturnFinishInfo,
 		"detectFrequency":  p.DetectFrequency, // 通知的频次   秒/次

@@ -51,7 +51,7 @@ func SendImMessage(ctx utils.Context, fromId string, toId string, content MsgCon
 		SendMsgControl:        sendMsgControl,
 		CloudCustomData:       cloudCustomDataStr,
 		OfflinePushInfo:       offLineData,
-		MsgBody:               []MsgBody{{MsgType: content.GetMsgType(), MsgContent: content}},
+		MsgBody:               []MsgBody{{MsgType: content.GetMsgType(), MsgContent: content.GetData()}},
 	}
 	if res == nil {
 		res = &CommonResponse{}
@@ -94,7 +94,7 @@ func SendBatchImMessage(ctx utils.Context, fromId string, toIds []string, conten
 		SendMsgControl:   sendMsgControl,
 		CloudCustomData:  cloudCustomData,
 		OfflinePushInfo:  offLineData,
-		MsgBody:          []MsgBody{{MsgType: content.GetMsgType(), MsgContent: content}},
+		MsgBody:          []MsgBody{{MsgType: content.GetMsgType(), MsgContent: content.GetData()}},
 	}
 	if res == nil {
 		res = &BatchCommonResponse{}
@@ -223,6 +223,29 @@ func AccountImport(ctx utils.Context, userId string, nick string, avatar string)
 	}
 	res := map[string]any{}
 	err := SendImRequest(ctx, "AccountImport", requestData, &res)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+//	{
+//	   "From_Account":"id",
+//	   "ProfileItem":
+//	   [
+//	       {
+//	           "Tag":"Tag_Profile_IM_Nick",
+//	           "Value":"MyNickName"
+//	       }
+//	   ]
+//	}
+func ModifyUserInfo(ctx utils.Context, userId string, changeInfo []map[string]any) (any, error) {
+	requestData := map[string]any{
+		"From_Account": userId,
+		"ProfileItem":  changeInfo,
+	}
+	res := map[string]any{}
+	err := SendImRequest(ctx, "PortraitSet", requestData, &res)
 	if err != nil {
 		return nil, err
 	}
