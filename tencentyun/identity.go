@@ -1,7 +1,6 @@
 package tencentyun
 
 import (
-	"encoding/json"
 	"github.com/preceeder/gobase/utils"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
@@ -27,11 +26,17 @@ func InitTencentFaceId(appid string, serverSecret string) {
 func Identity(ctx utils.Context, name string, idCard string) (string, string) {
 
 	//创建common client
-	m := map[string]string{"IdCard": idCard, "name": name}
-	mStr, _ := json.Marshal(m)
-	request := v20180301.IdCardVerificationRequest{}
-	_ = request.FromJsonString(string(mStr))
-	cardVerification, err := FaceIdClient.IdCardVerification(&request)
+	//m := map[string]string{"IdCard": idCard, "name": name}
+	//mStr, _ := json.Marshal(m)
+	request := v20180301.NewIdCardVerificationRequest()
+	request.IdCard = &idCard
+	request.Name = &name
+	//request := v20180301.IdCardVerificationRequest{
+	//	IdCard: &idCard,
+	//	Name:   &name,
+	//}
+	//_ = request.FromJsonString(string(mStr))
+	cardVerification, err := FaceIdClient.IdCardVerification(request)
 	if err != nil {
 		slog.Error("访问身份二要素检查接口失败", "errors", err.Error(), "requestId", ctx.RequestId)
 		return "", "服务异常"

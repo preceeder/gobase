@@ -13,6 +13,7 @@ import (
 	"github.com/preceeder/gobase/utils"
 	"golang.org/x/exp/rand"
 	"log/slog"
+	"slices"
 	"time"
 )
 
@@ -229,10 +230,26 @@ func AccountImport(ctx utils.Context, userId string, nick string, avatar string)
 	return res, nil
 }
 
+// MultiAccountImport
+// 导入多个账号
+func MultiAccountImport(ctx utils.Context, userIds []string) (any, error) {
+	requestData := map[string]any{
+		"Accounts": userIds,
+	}
+	res := map[string]any{}
+	err := SendImRequest(ctx, "MultiAccountImport", requestData, &res)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+// ModifyUserInfo
+// 修改用户资料
+//
 //	{
 //	   "From_Account":"id",
-//	   "ProfileItem":
-//	   [
+//	   "ProfileItem": [
 //	       {
 //	           "Tag":"Tag_Profile_IM_Nick",
 //	           "Value":"MyNickName"
@@ -250,4 +267,31 @@ func ModifyUserInfo(ctx utils.Context, userId string, changeInfo []map[string]an
 		return nil, err
 	}
 	return res, nil
+}
+
+// QueryUserInfo
+// 获取用户资料
+// 默认读取 Tag_Profile_IM_Nick,Tag_Profile_IM_Gender, Tag_Profile_IM_BirthDay,Tag_Profile_IM_Location,
+// Tag_Profile_IM_SelfSignature,Tag_Profile_IM_Image
+func QueryUserInfo(ctx utils.Context, userId []string, tags ...string) (any, error) {
+	requestData := map[string]any{
+		"To_Account": userId,
+		"TagList":    []string{},
+	}
+	defaultTagList := []string{
+		"Tag_Profile_IM_Nick", "Tag_Profile_IM_Gender", "Tag_Profile_IM_BirthDay", "Tag_Profile_IM_Location",
+		"Tag_Profile_IM_SelfSignature", "Tag_Profile_IM_Image",
+	}
+	for _, tag := range defaultTagList {
+		if !slices.Contains(tags, tag) {
+			tags = append(tags, tag)
+		}
+	}
+	res := map[string]any{}
+	err := SendImRequest(ctx, "PortraitGet", requestData, &res)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+
 }

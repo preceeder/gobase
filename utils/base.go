@@ -53,6 +53,9 @@ func GetAttr(object interface{}, attr string, output interface{}) (err error) {
 }
 
 func AnyToString(agrs any, spacing []byte) (string, error) {
+	if agrs == nil {
+		return "", errors.New("参数不存在")
+	}
 	//这里目前可以是 数组， int, string, float
 	vV := reflect.ValueOf(agrs)
 	vV = reflect.Indirect(vV)

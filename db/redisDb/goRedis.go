@@ -350,10 +350,10 @@ func (r *RedisLocks) GetLock(db ...string) bool {
 	}
 
 	if r.Exp == 0 {
-		r.Exp = 5
+		r.Exp = 500
 	}
 
-	expl := time.Duration(r.Exp * 1000000)
+	expl := time.Millisecond * time.Duration(r.Exp)
 	res, err := r.db.SetNX(ctx, r.Key, r.Value, expl).Result()
 	if err != nil {
 		slog.Error("redisDb 加锁失败 key: "+r.Key+"err: "+err.Error(), "requestId", r.Context2.GetString("requestId"))

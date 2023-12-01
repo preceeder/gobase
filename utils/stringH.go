@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"log/slog"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -63,7 +64,10 @@ func StrBindName(str string, args map[string]any, spacing []byte) (temPs string,
 			break
 		}
 		name := str[start+2 : end]
-		nameSt, _ := AnyToString(args[name], spacing)
+		nameSt, err := AnyToString(args[name], spacing)
+		if err != nil {
+			slog.Error("StrBindName 参数不存在", "str", str, "args", args)
+		}
 		temPs += str[:start] + nameSt
 		str = str[end+2:]
 	}
