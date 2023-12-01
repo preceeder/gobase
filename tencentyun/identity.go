@@ -7,15 +7,14 @@ import (
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/regions"
 	v20180301 "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/faceid/v20180301"
 	"log/slog"
-	"os"
 )
 
 var FaceIdClient *v20180301.Client
 
 func InitTencentFaceId(appid string, serverSecret string) {
 	credential := common.NewCredential(
-		os.Getenv(appid),
-		os.Getenv(serverSecret))
+		appid,
+		serverSecret)
 	cpf := profile.NewClientProfile()
 	cpf.HttpProfile.Endpoint = "faceid.tencentcloudapi.com"
 	cpf.HttpProfile.ReqMethod = "POST"
@@ -26,16 +25,9 @@ func InitTencentFaceId(appid string, serverSecret string) {
 func Identity(ctx utils.Context, name string, idCard string) (string, string) {
 
 	//创建common client
-	//m := map[string]string{"IdCard": idCard, "name": name}
-	//mStr, _ := json.Marshal(m)
 	request := v20180301.NewIdCardVerificationRequest()
 	request.IdCard = &idCard
 	request.Name = &name
-	//request := v20180301.IdCardVerificationRequest{
-	//	IdCard: &idCard,
-	//	Name:   &name,
-	//}
-	//_ = request.FromJsonString(string(mStr))
 	cardVerification, err := FaceIdClient.IdCardVerification(request)
 	if err != nil {
 		slog.Error("访问身份二要素检查接口失败", "errors", err.Error(), "requestId", ctx.RequestId)

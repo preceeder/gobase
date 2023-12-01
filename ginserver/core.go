@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/preceeder/gobase/utils"
+	"log/slog"
 	"net/http"
 	"strconv"
 )
@@ -41,6 +42,7 @@ type GContext struct {
 func (c GContext) GetBody(obj any) {
 	err := c.Context.ShouldBindBodyWith(obj, binding.JSON)
 	if err != nil {
+		slog.Error("获取body 失败", "erorr", err.Error(), "requestId", c.RequestId)
 		panic(BaseHttpError{Code: StatusCodeCommonErr, ErrorCode: CodeParameterError, Message: "Parameter abnormality"})
 	}
 }
@@ -48,6 +50,7 @@ func (c GContext) GetBody(obj any) {
 func (c GContext) GetQuery(obj any) {
 	err := c.Context.ShouldBindQuery(obj)
 	if err != nil {
+		slog.Error("获取query 失败", "erorr", err.Error(), "requestId", c.RequestId)
 		panic(BaseHttpError{Code: StatusCodeCommonErr, ErrorCode: CodeParameterError, Message: "Parameter abnormality"})
 	}
 }
