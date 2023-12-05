@@ -88,6 +88,7 @@ func GetStackTrace(funcName string, step int) string {
 					fmt.Fprintf(buf, " --> ")
 				}
 				step -= 1
+				continue
 			}
 			break
 

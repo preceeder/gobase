@@ -37,6 +37,20 @@ func SliceToMap[K ~string | ~int, V any | ~string | ~int | ~uint8](k []K, v []V)
 	return res, nil
 }
 
+type CanHashType interface {
+	~string | ~int | ~uint8 | ~int16 | ~int32 | ~int64 | ~float32 | ~float64
+}
+
+// 对象数组 转化为 对象 map
+func StructSliceToStructMap[T ~[]E, E any, K CanHashType](datas T, f func(data E) (K, E)) map[K]E {
+	var temp = map[K]E{}
+	for _, v := range datas {
+		k, value := f(v)
+		temp[k] = value
+	}
+	return temp
+}
+
 // map 数组 转化为 strcut 数组  []map[string]any   to []struct{}
 func LiceMapToStruct(rows []map[string]any, dest interface{}) error {
 	var vp reflect.Value
