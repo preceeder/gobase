@@ -60,6 +60,11 @@ func (c GContext) QueryInt(key string) (int, error) {
 	return kd, err
 }
 
+func (c GContext) QueryInt64(key string) (int64, error) {
+	kd, err := strconv.ParseInt(c.Query(key), 10, 64)
+	return kd, err
+}
+
 func (c GContext) QueryPageSize() (int, int) {
 	page, err := strconv.Atoi(c.DefaultQuery("page", "0"))
 	if err != nil {
