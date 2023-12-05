@@ -7,6 +7,7 @@ import (
 	"github.com/bytedance/sonic"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+	"github.com/preceeder/gobase/try"
 	"github.com/preceeder/gobase/utils"
 	"github.com/spf13/viper"
 	"log/slog"
@@ -117,7 +118,8 @@ func (s Sdb) getTableName(ctx utils.Context, params map[string]any) (tableName s
 		tableName = tn.(string)
 		delete(params, "tableName")
 	} else {
-		slog.Error("mysqlDb not table name", "requestId", ctx.RequestId, "params", params)
+		lastFunc := try.GetStackTrace("mysqlDb.Sdb.getTableName", 2)
+		slog.Error("mysqlDb not table name", "lastFunc", lastFunc, "requestId", ctx.RequestId, "params", params)
 		panic("not table name")
 	}
 	return
@@ -129,12 +131,14 @@ func (s Sdb) sqlPares(ctx utils.Context, osql string, params map[string]any) (sq
 	var err error
 	sql, args, err = sqlx.Named(osql, params)
 	if err != nil {
-		slog.Error("sqlx.Named error :"+err.Error(), "requestId", ctx.RequestId)
+		lastFunc := try.GetStackTrace("mysqlDb.Sdb.sqlPares", 2)
+		slog.Error("sqlx.Named error :"+err.Error(), "lastFunc", lastFunc, "requestId", ctx.RequestId)
 		panic("sqlx.Named error :" + err.Error())
 	}
 	sql, args, err = sqlx.In(sql, args...)
 	if err != nil {
-		slog.Error("sqlx.In error :"+err.Error(), "requestId", ctx.RequestId)
+		lastFunc := try.GetStackTrace("mysqlDb.Sdb.sqlPares", 2)
+		slog.Error("sqlx.In error :"+err.Error(), "lastFunc", lastFunc, "requestId", ctx.RequestId)
 		panic("sqlx.In error :" + err.Error())
 	}
 	sql = s.Db[db].Rebind(sql)
@@ -148,7 +152,8 @@ func (s Sdb) Select(ctx utils.Context, sqlStr string, params map[string]any, row
 	case errors.Is(err, sql.ErrNoRows):
 		return false
 	case err != nil:
-		slog.Error("mysqlDb Query failed", "error", err, "sql", sqlStr, "data", params, "requestId", ctx.RequestId)
+		lastFunc := try.GetStackTrace("mysqlDb.Sdb.Select", 1)
+		slog.Error("mysqlDb Query failed", "error", err, "sql", sqlStr, "data", params, "lastFunc", lastFunc, "requestId", ctx.RequestId)
 		return false
 	}
 	return true
@@ -161,7 +166,8 @@ func (s Sdb) Fetch(ctx utils.Context, sqlStr string, params map[string]any, row 
 	case errors.Is(err, sql.ErrNoRows):
 		return false
 	case err != nil:
-		slog.Error("mysqlDb Fetch StructScan failed", "error", err, "sql", sqlStr, "data", params, "requestId", ctx.RequestId)
+		lastFunc := try.GetStackTrace("mysqlDb.Sdb.Fetch", 1)
+		slog.Error("mysqlDb Fetch StructScan failed", "error", err, "lastFunc", lastFunc, "sql", sqlStr, "data", params, "requestId", ctx.RequestId)
 		return false
 	}
 	return true
@@ -178,7 +184,8 @@ func (s Sdb) FetchByArgs(ctx utils.Context, sqlStr string, args []any, db string
 	case errors.Is(err, sql.ErrNoRows):
 		return false
 	case err != nil:
-		slog.Error("mysqlDb Fetch StructScan failed", "error", err, "sql", sqlStr, "data", args, "requestId", ctx.RequestId)
+		lastFunc := try.GetStackTrace("mysqlDb.Sdb.FetchByArgs", 1)
+		slog.Error("mysqlDb Fetch StructScan failed", "error", err, "lastFunc", lastFunc, "sql", sqlStr, "data", args, "requestId", ctx.RequestId)
 		return false
 	}
 	return true
@@ -230,7 +237,8 @@ func (s Sdb) Update(ctx utils.Context, params map[string]any, tx ...*sqlx.Tx) in
 
 	if err != nil {
 		paS, _ := sonic.MarshalString(args)
-		slog.Error("mysqlDb update failed", "error", err, "sql", q, "data", paS, "requestId", ctx.RequestId)
+		lastFunc := try.GetStackTrace("mysqlDb.Sdb.Update", 1)
+		slog.Error("mysqlDb update failed", "error", err, "lastFunc", lastFunc, "sql", q, "data", paS, "requestId", ctx.RequestId)
 		return -1
 	}
 	aft, _ := rs.RowsAffected()
@@ -262,7 +270,8 @@ func (s Sdb) Insert(ctx utils.Context, params map[string]any, tx ...*sqlx.Tx) sq
 		rs, err = s.Db[db].NamedExec(sqlStr, params)
 	}
 	if err != nil {
-		slog.Error("mysqlDb insert failed", "error", err.Error(), "sql", sqlStr, "data", params, "requestId", ctx.RequestId)
+		lastFunc := try.GetStackTrace("mysqlDb.Sdb.Insert", 1)
+		slog.Error("mysqlDb insert failed", "error", err.Error(), "lastFunc", lastFunc, "sql", sqlStr, "data", params, "requestId", ctx.RequestId)
 		return nil
 	}
 
@@ -316,7 +325,9 @@ func (s Sdb) InsertMany(ctx utils.Context, params map[string]any, tx ...*sqlx.Tx
 		rs, err = s.Db[db].NamedExec(sqlStr, allValues)
 	}
 	if err != nil {
-		slog.Error("mysqlDb insert failed", "error", err.Error(), "sql", sqlStr, "data", allValues, "requestId", ctx.RequestId)
+		lastFunc := try.GetStackTrace("mysqlDb.Sdb.InsertMany", 1)
+
+		slog.Error("mysqlDb insert failed", "error", err.Error(), "lastFunc", lastFunc, "sql", sqlStr, "data", allValues, "requestId", ctx.RequestId)
 		return nil
 	}
 
@@ -369,7 +380,8 @@ func (s Sdb) InsertUpdate(ctx utils.Context, params map[string]any, tx ...*sqlx.
 		rs, err = s.Db[db].NamedExec(sqlStr, setValues)
 	}
 	if err != nil {
-		slog.Error("mysqlDb insert failed", "error", err.Error(), "sql", sqlStr, "data", params, "requestId", ctx.RequestId)
+		lastFunc := try.GetStackTrace("mysqlDb.Sdb.InsertUpdate", 1)
+		slog.Error("mysqlDb insert failed", "error", err.Error(), "lastFunc", lastFunc, "sql", sqlStr, "data", params, "requestId", ctx.RequestId)
 		return nil
 	}
 
@@ -387,7 +399,9 @@ func (s Sdb) Execute(ctx utils.Context, sqlStr string, params map[string]any, tx
 		rs, err = s.Db[db].Exec(q, args...)
 	}
 	if err != nil {
-		slog.Error("mysqlDb Execute failed", "error", err, "sql", q, "data", params, "requestId", ctx.RequestId)
+		lastFunc := try.GetStackTrace("mysqlDb.Sdb.Execute", 1)
+
+		slog.Error("mysqlDb Execute failed", "error", err, "lastFunc", lastFunc, "sql", q, "data", params, "requestId", ctx.RequestId)
 		return nil
 	}
 	return rs
@@ -404,20 +418,23 @@ func (s Sdb) Transaction(ctx utils.Context, queryObj func(Sdb, *sqlx.Tx)) (err e
 	defer func() {
 		if p := recover(); p != nil {
 			err = beginx.Rollback()
-			slog.Error("事务回滚", "error", err, "requestId", ctx.RequestId)
+			lastFunc := try.GetStackTrace("mysqlDb.Sdb.Transaction", 1)
+			slog.Error("事务回滚", "error", err, "lastFunc", lastFunc, "requestId", ctx.RequestId)
 			if err != nil {
 				return
 			}
 		} else if err != nil {
 			err = beginx.Rollback()
-			slog.Error("事务回滚", "error", err, "requestId", ctx.RequestId)
+			lastFunc := try.GetStackTrace("mysqlDb.Sdb.Transaction", 1)
+			slog.Error("事务回滚", "error", "lastFunc", lastFunc, err, "requestId", ctx.RequestId)
 			if err != nil {
 				return
 			}
 		} else {
 			err = beginx.Commit()
 			if err != nil {
-				slog.Error("提交失败", "error", err, "requestId", ctx.RequestId)
+				lastFunc := try.GetStackTrace("mysqlDb.Sdb.Transaction", 1)
+				slog.Error("提交失败", "error", err, "lastFunc", lastFunc, "requestId", ctx.RequestId)
 				return
 			}
 		}

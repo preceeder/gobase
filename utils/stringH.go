@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"github.com/preceeder/gobase/try"
 	"log/slog"
 	"math/rand"
 	"strconv"
@@ -66,7 +67,8 @@ func StrBindName(str string, args map[string]any, spacing []byte) (temPs string,
 		name := str[start+2 : end]
 		nameSt, err := AnyToString(args[name], spacing)
 		if err != nil {
-			slog.Error("StrBindName 参数不存在", "str", str, "args", args)
+			lastFunc := try.GetStackTrace("utils.StrBindName", 1)
+			slog.Error("StrBindName 参数不存在", "lastFunc", lastFunc, "str", str, "args", args)
 		}
 		temPs += str[:start] + nameSt
 		str = str[end+2:]

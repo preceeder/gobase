@@ -25,6 +25,7 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/duke-git/lancet/v2/convertor"
 	"github.com/duke-git/lancet/v2/cryptor"
+	"github.com/preceeder/gobase/try"
 	"github.com/preceeder/gobase/utils"
 	"github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
@@ -356,7 +357,8 @@ func (r *RedisLocks) GetLock(db ...string) bool {
 	expl := time.Millisecond * time.Duration(r.Exp)
 	res, err := r.db.SetNX(ctx, r.Key, r.Value, expl).Result()
 	if err != nil {
-		slog.Error("redisDb 加锁失败 key: "+r.Key+"err: "+err.Error(), "requestId", r.Context2.GetString("requestId"))
+		lastFunc := try.GetStackTrace("redisDb.(*RedisLocks).GetLock", 1)
+		slog.Error("redisDb 加锁失败 key: "+r.Key+"err: "+err.Error(), "lastFunc", lastFunc, "requestId", r.Context2.GetString("requestId"))
 		panic("redisDb 加锁失败 key: " + r.Key + "err: " + err.Error())
 	}
 	return res
