@@ -8,7 +8,7 @@ Change Activity:
 package logs
 
 import (
-	"golang.org/x/net/context"
+	"context"
 	"io"
 	"log/slog"
 )

@@ -69,6 +69,20 @@ func initSlog(cfg LogConfig) {
 			d := a.Value.Any().(*slog.Source)
 			if strings.HasSuffix(d.Function, "ginserver.InitRouter.GinLogger.func2") {
 				a.Value = slog.Value{}
+			} else {
+				pwd, _ := os.Executable()
+				d.File = strings.TrimPrefix(d.File, pwd)
+				var as []slog.Attr
+				if d.Function != "" {
+					as = append(as, slog.String("function", d.Function))
+				}
+				if d.File != "" {
+					as = append(as, slog.String("file", d.File))
+				}
+				if d.Line != 0 {
+					as = append(as, slog.Int("line", d.Line))
+				}
+				a.Value = slog.GroupValue(as...)
 			}
 		}
 		return a

@@ -50,13 +50,6 @@ func (receiver Query) String() string {
 	return data
 }
 
-// header
-//type HeaderString string
-//
-//func (receiver HeaderString) GetType() string {
-//	return "header"
-//}
-
 type Header struct {
 }
 
@@ -93,11 +86,3 @@ func (receiver Form) String() string {
 	data, _ := sonic.MarshalString(receiver)
 	return data
 }
-
-//
-//// path
-//type Path string
-//
-//func (p Path) GetType() string {
-//	return "path"
-//}
