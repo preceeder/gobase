@@ -39,7 +39,11 @@ func SendImMessage(ctx utils.Context, fromId string, toId string, content MsgCon
 	var randInt = rand.New(rand.NewSource(uint64(time.Now().UnixNano())))
 	var cloudCustomDataStr string
 	if cloudCustomData != nil {
-		cloudCustomDataStr, _ = sonic.ConfigFastest.MarshalToString(cloudCustomData)
+		if ctr, ok := cloudCustomData.(string); !ok {
+			cloudCustomDataStr = ctr
+		} else {
+			cloudCustomDataStr, _ = sonic.ConfigFastest.MarshalToString(cloudCustomData)
+		}
 	}
 
 	var message = Message{

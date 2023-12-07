@@ -47,8 +47,12 @@ func (c CustomContent) GetMsgType() string {
 }
 func (c *CustomContent) GetData() any {
 	var err1, err2 error
-	c.Data, err1 = sonic.ConfigFastest.MarshalToString(c.Data)
-	c.Ext, err2 = sonic.ConfigFastest.MarshalToString(c.Ext)
+	if _, ok := c.Data.(string); !ok {
+		c.Data, err1 = sonic.ConfigFastest.MarshalToString(c.Data)
+	}
+	if _, ok := c.Ext.(string); !ok {
+		c.Ext, err2 = sonic.ConfigFastest.MarshalToString(c.Ext)
+	}
 	err := errors.Join(err1, err2)
 	if err != nil {
 		slog.Error("CustomContent Get Data error", "error", err.Error(), "data", c.Data, "ext", c.Ext)
