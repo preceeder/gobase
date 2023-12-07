@@ -60,9 +60,9 @@ func SendImMessage(ctx utils.Context, fromId string, toId string, content MsgCon
 	//fmt.Println(sonic.ConfigFastest.MarshalToString(message))
 	err := SendImRequest(ctx, "SendMsg", message, res)
 	if err != nil {
+		slog.Info("发送消息response error", "response", res.GetResponse(), "from", fromId, "to", toId)
+
 		return err
-	} else {
-		slog.Info("发送消息response", "response", res.GetResponse())
 	}
 	return nil
 }
@@ -287,6 +287,7 @@ func QueryUserInfo(ctx utils.Context, userId []string, tags ...string) (any, err
 			tags = append(tags, tag)
 		}
 	}
+	requestData["TagList"] = tags
 	res := map[string]any{}
 	err := SendImRequest(ctx, "PortraitGet", requestData, &res)
 	if err != nil {

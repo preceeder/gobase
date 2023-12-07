@@ -8,17 +8,6 @@ Change Activity:
 package shumei
 
 // ---------------   请求参数 --------------
-type ShumeiAsyncImage struct {
-	ImageUrl       string
-	UserId         string
-	ReceiveTokenId string
-	MType          string
-	Lang           string
-	Ip             string
-	ThroughParams  map[string]any
-	CallBaskUrl    string
-}
-
 type ShumeiImage struct {
 	ImageUrl       string
 	UserId         string
@@ -26,6 +15,22 @@ type ShumeiImage struct {
 	MType          string
 	Lang           string
 	Ip             string
+	ThroughParams  map[string]any
+	NeedCallBack   bool
+	CallBaskUrl    string
+}
+
+// 同步
+type ShumeiMultiImage struct {
+	ImageUrl       []string
+	UserId         string
+	ReceiveTokenId string
+	MType          string
+	Lang           string
+	Ip             string
+	ThroughParams  map[string]any
+	NeedCallBack   bool
+	CallBaskUrl    string
 }
 
 type ShumeiText struct {
@@ -43,7 +48,7 @@ type ShumeiVoiceFile struct {
 	ReceiveTokenId string
 	MType          string
 	EventId        string
-	NeedCallback   bool           // 异步回调需要
+	CallbackUrl    string         // 异步回调需要
 	Lang           string         // 异步回调需要
 	CallbackParams map[string]any // 异步回调需要
 }
@@ -57,6 +62,7 @@ type ShumeiAsyncVideoFile struct {
 	VoiceType      string
 	EventId        string
 	Lang           string
+	CallBackUrl    string
 	ThroughParams  map[string]any
 }
 

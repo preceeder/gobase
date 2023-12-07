@@ -16,10 +16,10 @@ import (
 	"strings"
 )
 
-func CatchException(handle func(err any, e string)) {
+func CatchException(handle func(err any, trace string)) {
 	if err := recover(); err != nil {
-		e := printStackTrace(err)
-		handle(err, e)
+		trace := printStackTrace(err)
+		handle(err, trace)
 	}
 }
 
