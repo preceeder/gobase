@@ -349,7 +349,7 @@ func (s Sdb) InsertUpdate(ctx utils.Context, params map[string]any, tx ...*sqlx.
 			if vt, ok := v.([]string); ok {
 				tpv = "`" + k + "`" + " = " + vt[0]
 			} else {
-				tpv = "`" + k + "`" + "=values(`" + k + "`)"
+				tpv = "`" + k + "`" + "=values(`" + v.(string) + "`)"
 			}
 			UpdateL = append(UpdateL, tpv)
 		}
