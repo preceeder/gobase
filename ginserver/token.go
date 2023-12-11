@@ -5,11 +5,12 @@ import (
 	"github.com/duke-git/lancet/v2/cryptor"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/preceeder/gobase/utils"
+	"log/slog"
 	"time"
 )
 
-const TokenSignKey = "tjly(Ap]@m$T0^x"
-const TokenAesKey = "tjly(Ap]@m$T0^23"
+var TokenSignKey = "tjly(Ap]@m$T0^x"
+var TokenAesKey = "tjly(Ap]@m$T0^23"
 
 type CustomClaims struct {
 	jwt.RegisteredClaims
@@ -37,7 +38,8 @@ func TokenGenerateUsingHs256(mclaim map[string]string) (string, error) {
 func TokenParseHs256(tokenSecrete string) (*CustomClaims, error) {
 	defer func() {
 		if err := recover(); err != nil {
-			panic(BaseHttpError{Code: StatusCodeTokenError, ErrorCode: CodeTokenError, Message: "toekn error"})
+			slog.Error("TokenParseHs256", "error", err)
+			panic(BaseHttpError{Code: StatusCodeTokenError, ErrorCode: CodeTokenError, Message: "token error"})
 		}
 	}()
 	tokenbyte, _ := base64.StdEncoding.DecodeString(tokenSecrete)

@@ -72,6 +72,8 @@ func (v VoclClientA) CloseRoom(roomId, appId, userId, forbiddenInterval string) 
 		form.Set("ForbiddenInterval", forbiddenInterval)
 	}
 	res, status, err := v.Client.Post("BanRoomUser", nil, form)
-	slog.Info("CloseRoom", "res", res, "status", status, "err", err)
+	if err != nil {
+		slog.Info("CloseRoom", "res", res, "status", status, "err", err)
+	}
 	return err
 }

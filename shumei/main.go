@@ -10,6 +10,7 @@ package shumei
 import (
 	"github.com/bytedance/sonic"
 	mapset "github.com/deckarep/golang-set"
+	"github.com/duke-git/lancet/v2/cryptor"
 	"github.com/go-resty/resty/v2"
 	"github.com/preceeder/gobase/utils"
 	"github.com/preceeder/gobase/utils/datetimeh"
@@ -27,17 +28,23 @@ var textLangSet = mapset.NewSet("zh", "en", "ar", "hi", "es", "fr", "ru", "pt", 
 var voiceLangSet = mapset.NewSet("zh", "en", "ar", "hi", "es", "fr", "ru", "pt", "id", "de", "ja", "tr", "vi", "it", "th", "tl", "ko", "ms")
 
 type ShumeiUrl struct {
-	VideoStreamCloseUrl   string `json:"videoStreamCloseUrl"`   // 视频流检查关闭的数美url
-	VoiceStreamCloseUrl   string `json:"voiceStreamCLoseUrl"`   // 语音流检查关闭的数美url
-	ImageUrl              string `json:"imageUrl"`              // 同步图片的检查的数美url
-	TextUrl               string `json:"textUrl"`               // 文本检查的数美url
-	VoiceUrl              string `json:"voiceUrl"`              // 语音文件检查的数美url
-	AsyncVoiceUrl         string `json:"asyncVoiceUrl"`         // 异步语音文件检查的数美url
-	AsyncVoiceCallBackUrl string `json:"asyncVoiceCallBackUrl"` // 异步语音文件检查回调url
-	AsyncVideoUrl         string `json:"asyncVideoUrl"`         // 视频文件检查的数美url
-	AsyncVideoCallBackUrl string `json:"asyncVideoCallBackUrl"` // 视频文件检查回调url
-	VoiceStreamUrl        string `json:"voiceStreamUrl"`        // 音频流检查url
-	VideoStreamUrl        string `json:"videoStreamUrl"`        // 视频流检查url
+	VideoStreamCloseUrl    string `json:"videoStreamCloseUrl"`    // 视频流检查关闭的数美url
+	VoiceStreamCloseUrl    string `json:"voiceStreamCLoseUrl"`    // 语音流检查关闭的数美url
+	ImageUrl               string `json:"imageUrl"`               // 单张图片的检查的数美url
+	MultiImageUrl          string `json:"multiImageUrl"`          // 同步多张图片的检查的数美url
+	TextUrl                string `json:"textUrl"`                // 文本检查的数美url
+	VoiceUrl               string `json:"voiceUrl"`               // 语音文件检查的数美url
+	AsyncVoiceUrl          string `json:"asyncVoiceUrl"`          // 异步语音文件检查的数美url
+	AsyncVideoUrl          string `json:"asyncVideoUrl"`          // 视频文件检查的数美url
+	VoiceStreamUrl         string `json:"voiceStreamUrl"`         // 音频流检查url
+	VideoStreamUrl         string `json:"videoStreamUrl"`         // 视频流检查url
+	ImageCallBackUrl       string `json:"imageCallBackUrl"`       // 图片回调 url
+	MultiImageCallBackUrl  string `json:"multiImageCallBackUrl"`  // 图片回调 url
+	VoiceCallBackUrl       string `json:"voiceCallBackUrl"`       // 语音文件检查回调url
+	VideoCallBackUrl       string `json:"videoCallBackUrl"`       // 视频文件检查回调url
+	VoiceStreamCallBackUrl string `json:"voiceStreamCallBackUrl"` // 音频流回调url
+	VideoStreamCallBackUrl string `json:"videoStreamCallBackUrl"` // 视频流回调url
+
 }
 type ShumeiConfig struct {
 	AppId          string    `json:"appid"`
@@ -79,7 +86,6 @@ type ShuMei struct {
 	HttpClient       *resty.Client
 	CdnUrl           string    // 资源的 url 最后不加 /
 	CallBackDomain   string    // 回调域名  url 最后不加 /
-	StreamType       string    // 目前默认值 ZEGO
 	ShumeiUrl        ShumeiUrl // 数美接口的urls
 }
 
@@ -108,9 +114,6 @@ func NewShuMei(appId string, accessKey string, optionals ...func(*ShuMei) error)
 	}
 	if sh.DefaultVideoType == "" {
 		sh.DefaultVideoType = "POLITY_EROTIC_ADVERT"
-	}
-	if sh.StreamType == "" {
-		sh.StreamType = "ZEGO"
 	}
 
 	return sh, nil
@@ -214,8 +217,17 @@ func (s ShuMei) textLangHandler(lang string) string {
 	return lang
 }
 
-// 同步 图片检查
-func (s ShuMei) AsyncImage(ctx utils.Context, p ShumeiAsyncImage) (bool, *PublicLongResponse) {
+// 回调路径处理
+func (s ShuMei) HandlerCallBackUrl(urlStr string) string {
+	if !(strings.HasPrefix(urlStr, "http://") || strings.HasPrefix(urlStr, "https://")) {
+		urlStr, _ = url.JoinPath(s.CallBackDomain, urlStr)
+	}
+	return urlStr
+}
+
+// 传了callBackUrl  就是走回调
+func (s ShuMei) Image(ctx utils.Context, p ShumeiImage) (bool, *PublicLongResponse) {
+	//turl := "http://api-img-xjp.fengkongcloud.com/image/v4"
 	turl := s.ShumeiUrl.ImageUrl //  "http://api-img-sh.fengkongcloud.com/image/v4"
 
 	data := map[string]interface{}{
@@ -243,7 +255,75 @@ func (s ShuMei) AsyncImage(ctx utils.Context, p ShumeiAsyncImage) (bool, *Public
 		"businessType": "FACE",
 		"appId":        s.AppId,
 		"data":         data,
-		"callback":     p.CallBaskUrl,
+	}
+	if p.NeedCallBack {
+		payload["callback"] = s.ShumeiUrl.ImageCallBackUrl
+		if len(p.CallBaskUrl) > 0 {
+			payload["callback"] = s.HandlerCallBackUrl(p.CallBaskUrl)
+		}
+	}
+
+	res := &PublicLongResponse{}
+	_, err := s.Send(turl, payload, res)
+	if err != nil {
+		slog.Error("shumei image request", "error", err.Error(), "requestId", ctx.RequestId)
+		return true, nil
+	}
+
+	if res.Code == 1100 {
+		if res.RiskLevel == "REJECT" {
+			return false, res
+		}
+	}
+	return true, res
+}
+
+// 多张图片同时检查
+//
+//	传了callBackUrl  就是走回调
+func (s ShuMei) MultiImage(ctx utils.Context, p ShumeiMultiImage) (bool, *PublicLongResponse) {
+	turl := s.ShumeiUrl.ImageUrl //  "http://api-img-sh.fengkongcloud.com/image/v4"
+
+	data := map[string]interface{}{
+		"tokenId":        s.tokenHandler(p.UserId),
+		"receiveTokenId": s.tokenHandler(p.ReceiveTokenId),
+		"lang":           s.imageLangHandler(p.Lang),
+	}
+
+	data["imgs"] = ""
+	imgs := []map[string]string{}
+	for _, img := range p.ImageUrl {
+		imgs = append(imgs, map[string]string{
+			"img":  s.urlHandler(img),
+			"btId": cryptor.Md5String(img)[8:],
+		})
+	}
+
+	if p.Ip != "" {
+		data["ip"] = p.Ip
+	}
+
+	if p.MType == "" {
+		p.MType = s.DefaultImageType
+	}
+
+	data["extra"] = map[string]any{
+		"passThrough": p.ThroughParams,
+	}
+	payload := map[string]interface{}{
+		"accessKey":    s.AccessKey,
+		"appId":        s.AppId,
+		"eventId":      "IMAGE",
+		"type":         p.MType,
+		"businessType": "FACE",
+		"data":         data,
+	}
+
+	if p.NeedCallBack {
+		payload["callback"] = s.ShumeiUrl.MultiImageCallBackUrl
+		if len(p.CallBaskUrl) > 0 {
+			payload["callback"] = s.HandlerCallBackUrl(p.CallBaskUrl)
+		}
 	}
 
 	res := &PublicLongResponse{}
@@ -255,54 +335,12 @@ func (s ShuMei) AsyncImage(ctx utils.Context, p ShumeiAsyncImage) (bool, *Public
 
 	if res.Code != 1100 {
 		slog.Error("AsyncVoiceFile", "error", res.Message, "requestId", res.RequestID, "code", res.Code, "requestId", ctx.RequestId)
-		return false, nil
+		return false, res
 	}
 	return true, res
 }
 
-func (s ShuMei) Image(ctx utils.Context, p ShumeiImage) bool {
-	//turl := "http://api-img-xjp.fengkongcloud.com/image/v4"
-	turl := s.ShumeiUrl.ImageUrl //"http://api-img-sh.fengkongcloud.com/image/v4"
-
-	data := map[string]interface{}{
-		"img":            s.urlHandler(p.ImageUrl),
-		"tokenId":        s.tokenHandler(p.UserId),
-		"receiveTokenId": s.tokenHandler(p.ReceiveTokenId),
-		"lang":           s.imageLangHandler(p.Lang),
-	}
-	if p.Ip != "" {
-		data["ip"] = p.Ip
-	}
-
-	if p.MType == "" {
-		p.MType = s.DefaultImageType
-	}
-
-	payload := map[string]interface{}{
-		"accessKey":    s.AccessKey,
-		"type":         p.MType,
-		"eventId":      "IMAGE",
-		"businessType": "FACE",
-		"appId":        s.AppId,
-		"data":         data,
-	}
-
-	res := &PublicLongResponse{}
-	_, err := s.Send(turl, payload, res)
-	if err != nil {
-		slog.Error("shumei image request", "error", err.Error(), "requestId", ctx.RequestId)
-		return true
-	}
-
-	if res.Code == 1100 {
-		if res.RiskLevel == "REJECT" {
-			return false
-		}
-	}
-	return true
-}
-
-func (s ShuMei) Text(ctx utils.Context, p ShumeiText) bool {
+func (s ShuMei) Text(ctx utils.Context, p ShumeiText) (bool, *PublicLongResponse) {
 	turl := s.ShumeiUrl.TextUrl //"http://api-text-sh.fengkongcloud.com/text/v4"
 	data := map[string]interface{}{
 		"text":    p.Text,
@@ -331,18 +369,18 @@ func (s ShuMei) Text(ctx utils.Context, p ShumeiText) bool {
 	_, err := s.Send(turl, payload, res)
 	if err != nil {
 		slog.Error("shumei image request", "error", err.Error(), "requestId", ctx.RequestId)
-		return true
+		return true, nil
 	}
 	if res.Code == 1100 {
 		if res.RiskLevel == "REJECT" {
-			return false
+			return false, res
 		}
 	}
-	return true
+	return true, res
 }
 
 // 只支持 url的 同步
-func (s ShuMei) VoiceFile(ctx utils.Context, p ShumeiVoiceFile) bool {
+func (s ShuMei) VoiceFile(ctx utils.Context, p ShumeiVoiceFile) (bool, *VoiceFileResponse) {
 	turl := s.ShumeiUrl.VoiceUrl // "http://api-audio-sh.fengkongcloud.com/audiomessage/v4"
 	data := map[string]interface{}{
 		"tokenId": s.tokenHandler(p.UserId),
@@ -369,25 +407,24 @@ func (s ShuMei) VoiceFile(ctx utils.Context, p ShumeiVoiceFile) bool {
 	_, err := s.Send(turl, payload, res)
 	if err != nil {
 		slog.Error("shumei image request", "error", err.Error(), "requestId", ctx.RequestId)
-		return true
+		return true, nil
 	}
 	if res.Code == 1100 {
 		if res.Detail.RiskLevel == "REJECT" {
-			return false
+			return false, res
 		}
 	}
-	return true
+	return true, res
 }
 
 func (s ShuMei) AsyncVoiceFile(ctx utils.Context, p ShumeiVoiceFile) bool {
 	turl := s.ShumeiUrl.AsyncVoiceUrl //"http://api-audio-sh.fengkongcloud.com/audio/v4"
-	data := map[string]interface{}{
-		"tokenId": s.tokenHandler(p.UserId),
-		"lang":    s.voiceLangeHandler(p.Lang),
+	data := map[string]any{
+		"tokenId":     s.tokenHandler(p.UserId),
+		"lang":        s.voiceLangeHandler(p.Lang),
+		"passThrough": p.CallbackParams,
 	}
-	if len(p.CallbackParams) > 0 && p.NeedCallback {
-		data["passThrough"] = p.CallbackParams
-	}
+
 	if p.EventId == "" {
 		p.EventId = "default"
 	}
@@ -404,9 +441,11 @@ func (s ShuMei) AsyncVoiceFile(ctx utils.Context, p ShumeiVoiceFile) bool {
 		"content":     p.VoiceUrl,
 		"data":        data,
 		"btId":        utils.GenterWithoutRepetitionStr(16),
+		"callback":    s.ShumeiUrl.VoiceCallBackUrl,
 	}
-	if p.NeedCallback {
-		payload["callback"] = s.ShumeiUrl.AsyncVoiceCallBackUrl
+
+	if p.CallbackUrl != "" {
+		payload["callback"] = s.HandlerCallBackUrl(p.CallbackUrl)
 	}
 
 	res := &PublicShortResponse{}
@@ -422,7 +461,7 @@ func (s ShuMei) AsyncVoiceFile(ctx utils.Context, p ShumeiVoiceFile) bool {
 	return true
 }
 
-func (s ShuMei) AsyncVideoFile(ctx utils.Context, p ShumeiAsyncVideoFile) bool {
+func (s ShuMei) AsyncVideoFile(ctx utils.Context, p ShumeiAsyncVideoFile) (bool, *VideoFileResponse) {
 	//上海节点
 	turl := s.ShumeiUrl.AsyncVideoUrl // "http://api-video-sh.fengkongcloud.com/video/v4"
 	data := map[string]interface{}{
@@ -451,28 +490,25 @@ func (s ShuMei) AsyncVideoFile(ctx utils.Context, p ShumeiAsyncVideoFile) bool {
 		"eventId":   p.EventId,
 		"imgType":   p.VideoType,
 		"audioType": p.VoiceType,
-		"callback":  s.ShumeiUrl.AsyncVideoCallBackUrl,
+		"callback":  s.ShumeiUrl.VideoCallBackUrl,
 		"data":      data,
 	}
+
+	if p.CallBackUrl != "" {
+		payload["callback"] = s.HandlerCallBackUrl(p.CallBackUrl)
+	}
+
 	res := &VideoFileResponse{}
 	_, err := s.Send(turl, payload, res)
 	if err != nil {
 		slog.Error("shumei image request", "error", err.Error(), "requestId", ctx.RequestId)
-		return false
+		return false, nil
 	}
 	if res.Code != 1100 {
 		slog.Error("AsyncVoiceFile", "error", res.Message, "requestId", res.RequestID, "code", res.Code, "requestId", ctx.RequestId)
-		return false
+		return false, res
 	}
-	return true
-}
-
-// 回调路径处理
-func (s ShuMei) HandlerCallBackUrl(urlStr string) string {
-	if !(strings.HasPrefix(urlStr, "http://") || strings.HasPrefix(urlStr, "https://")) {
-		urlStr, _ = url.JoinPath(s.CallBackDomain, urlStr)
-	}
-	return urlStr
+	return true, res
 }
 
 // 音频流检查
@@ -482,7 +518,7 @@ func (s ShuMei) AudioStream(ctx utils.Context, p ShumeiAsyncAudioStream) (bool, 
 		"tokenId":          s.tokenHandler(p.UserId),
 		"lang":             s.voiceLangeHandler(p.Lang),
 		"btId":             utils.GenterWithoutRepetitionStr(16),
-		"streamType":       s.StreamType,
+		"streamType":       p.StreamType,
 		"returnAllText":    p.ReturnAllText,
 		"room":             p.RoomId,
 		"returnFinishInfo": 1,
@@ -535,7 +571,7 @@ func (s ShuMei) VideoStream(ctx utils.Context, p ShumeiAsyncVideoStream) (bool, 
 		"tokenId":          s.tokenHandler(p.UserId),
 		"lang":             s.imageLangHandler(p.Lang),
 		"btId":             utils.GenterWithoutRepetitionStr(16),
-		"streamType":       s.StreamType,
+		"streamType":       p.StreamType,
 		"room":             p.RoomId,
 		"returnFinishInfo": p.ReturnFinishInfo,
 		"detectFrequency":  p.DetectFrequency, // 通知的频次   秒/次

@@ -13,6 +13,7 @@ import (
 	"github.com/preceeder/gobase/utils"
 	"golang.org/x/exp/rand"
 	"log/slog"
+	"slices"
 	"time"
 )
 
@@ -38,7 +39,11 @@ func SendImMessage(ctx utils.Context, fromId string, toId string, content MsgCon
 	var randInt = rand.New(rand.NewSource(uint64(time.Now().UnixNano())))
 	var cloudCustomDataStr string
 	if cloudCustomData != nil {
-		cloudCustomDataStr, _ = sonic.ConfigFastest.MarshalToString(cloudCustomData)
+		if ctr, ok := cloudCustomData.(string); ok {
+			cloudCustomDataStr = ctr
+		} else {
+			cloudCustomDataStr, _ = sonic.ConfigFastest.MarshalToString(cloudCustomData)
+		}
 	}
 
 	var message = Message{
@@ -51,7 +56,7 @@ func SendImMessage(ctx utils.Context, fromId string, toId string, content MsgCon
 		SendMsgControl:        sendMsgControl,
 		CloudCustomData:       cloudCustomDataStr,
 		OfflinePushInfo:       offLineData,
-		MsgBody:               []MsgBody{{MsgType: content.GetMsgType(), MsgContent: content}},
+		MsgBody:               []MsgBody{{MsgType: content.GetMsgType(), MsgContent: content.GetData()}},
 	}
 	if res == nil {
 		res = &CommonResponse{}
@@ -59,9 +64,9 @@ func SendImMessage(ctx utils.Context, fromId string, toId string, content MsgCon
 	//fmt.Println(sonic.ConfigFastest.MarshalToString(message))
 	err := SendImRequest(ctx, "SendMsg", message, res)
 	if err != nil {
+		slog.Info("发送消息response error", "response", res.GetResponse(), "from", fromId, "to", toId)
+
 		return err
-	} else {
-		slog.Info("发送消息response", "response", res.GetResponse())
 	}
 	return nil
 }
@@ -94,7 +99,7 @@ func SendBatchImMessage(ctx utils.Context, fromId string, toIds []string, conten
 		SendMsgControl:   sendMsgControl,
 		CloudCustomData:  cloudCustomData,
 		OfflinePushInfo:  offLineData,
-		MsgBody:          []MsgBody{{MsgType: content.GetMsgType(), MsgContent: content}},
+		MsgBody:          []MsgBody{{MsgType: content.GetMsgType(), MsgContent: content.GetData()}},
 	}
 	if res == nil {
 		res = &BatchCommonResponse{}
@@ -227,4 +232,71 @@ func AccountImport(ctx utils.Context, userId string, nick string, avatar string)
 		return nil, err
 	}
 	return res, nil
+}
+
+// MultiAccountImport
+// 导入多个账号
+func MultiAccountImport(ctx utils.Context, userIds []string) (any, error) {
+	requestData := map[string]any{
+		"Accounts": userIds,
+	}
+	res := map[string]any{}
+	err := SendImRequest(ctx, "MultiAccountImport", requestData, &res)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+// ModifyUserInfo
+// 修改用户资料
+//
+//	{
+//	   "From_Account":"id",
+//	   "ProfileItem": [
+//	       {
+//	           "Tag":"Tag_Profile_IM_Nick",
+//	           "Value":"MyNickName"
+//	       }
+//	   ]
+//	}
+func ModifyUserInfo(ctx utils.Context, userId string, changeInfo []map[string]any) (any, error) {
+	requestData := map[string]any{
+		"From_Account": userId,
+		"ProfileItem":  changeInfo,
+	}
+	res := map[string]any{}
+	err := SendImRequest(ctx, "PortraitSet", requestData, &res)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+// QueryUserInfo
+// 获取用户资料
+// 默认读取 Tag_Profile_IM_Nick,Tag_Profile_IM_Gender, Tag_Profile_IM_BirthDay,Tag_Profile_IM_Location,
+// Tag_Profile_IM_SelfSignature,Tag_Profile_IM_Image
+func QueryUserInfo(ctx utils.Context, userId []string, tags ...string) (any, error) {
+	requestData := map[string]any{
+		"To_Account": userId,
+		"TagList":    []string{},
+	}
+	defaultTagList := []string{
+		"Tag_Profile_IM_Nick", "Tag_Profile_IM_Gender", "Tag_Profile_IM_BirthDay", "Tag_Profile_IM_Location",
+		"Tag_Profile_IM_SelfSignature", "Tag_Profile_IM_Image",
+	}
+	for _, tag := range defaultTagList {
+		if !slices.Contains(tags, tag) {
+			tags = append(tags, tag)
+		}
+	}
+	requestData["TagList"] = tags
+	res := map[string]any{}
+	err := SendImRequest(ctx, "PortraitGet", requestData, &res)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+
 }

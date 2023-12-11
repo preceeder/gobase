@@ -8,17 +8,6 @@ Change Activity:
 package shumei
 
 // ---------------   请求参数 --------------
-type ShumeiAsyncImage struct {
-	ImageUrl       string
-	UserId         string
-	ReceiveTokenId string
-	MType          string
-	Lang           string
-	Ip             string
-	ThroughParams  map[string]any
-	CallBaskUrl    string
-}
-
 type ShumeiImage struct {
 	ImageUrl       string
 	UserId         string
@@ -26,6 +15,22 @@ type ShumeiImage struct {
 	MType          string
 	Lang           string
 	Ip             string
+	ThroughParams  map[string]any
+	NeedCallBack   bool
+	CallBaskUrl    string
+}
+
+// 同步
+type ShumeiMultiImage struct {
+	ImageUrl       []string
+	UserId         string
+	ReceiveTokenId string
+	MType          string
+	Lang           string
+	Ip             string
+	ThroughParams  map[string]any
+	NeedCallBack   bool
+	CallBaskUrl    string
 }
 
 type ShumeiText struct {
@@ -43,7 +48,7 @@ type ShumeiVoiceFile struct {
 	ReceiveTokenId string
 	MType          string
 	EventId        string
-	NeedCallback   bool           // 异步回调需要
+	CallbackUrl    string         // 异步回调需要
 	Lang           string         // 异步回调需要
 	CallbackParams map[string]any // 异步回调需要
 }
@@ -57,12 +62,14 @@ type ShumeiAsyncVideoFile struct {
 	VoiceType      string
 	EventId        string
 	Lang           string
+	CallBackUrl    string
 	ThroughParams  map[string]any
 }
 
 // 只有异步
 type ShumeiAsyncAudioStream struct {
 	RtcParams       map[string]any
+	StreamType      string // 目前默认值 ZEGO
 	UserId          string
 	ReceiveTokenId  string
 	VoiceType       string
@@ -88,6 +95,7 @@ type ShumeiAsyncVideoStream struct {
 	ReturnFinishInfo int
 	Lang             string
 	RtcParams        map[string]any
+	StreamType       string // 目前默认值 ZEGO
 	RoomId           string
 	DetectFrequency  int // 检测频次
 	ThroughParams    map[string]any

@@ -136,7 +136,8 @@ func Register(controller interface{}) bool {
 			params := make([]ParamsRo, 0, paramsNum)
 			for j := 1; j < paramsNum; j++ {
 				pp := method.Type().In(j)
-				ppt := pp.Elem() // Elem会返回对
+				ppt := reflc.Direct(pp)
+				//ppt := pp.Elem() // Elem会返回对
 				if pp.Implements(GinParamType) {
 					// 参数结构体中 必须是 匿名的导入 ginserver.BodyJson 等
 					me, ok := pp.MethodByName("GetType")
@@ -144,7 +145,13 @@ func Register(controller interface{}) bool {
 					if !ok {
 						panic("params tag deletion")
 					}
-					fe := me.Func.Call([]reflect.Value{reflect.New(ppt)})
+					var fe = []reflect.Value{}
+					pptObject := reflect.New(ppt)
+					if pp.Kind() == reflect.Ptr {
+						fe = me.Func.Call([]reflect.Value{pptObject})
+					} else {
+						fe = me.Func.Call([]reflect.Value{pptObject.Elem()})
+					}
 					var tag binding.Binding
 					if t, ok := paramsTypeMap[fe[0].Interface().(string)]; ok {
 						tag = t
@@ -161,6 +168,7 @@ func Register(controller interface{}) bool {
 							if err != nil {
 								panic(err)
 							}
+
 							ptd := reflect.New(pf.Type).Elem()
 							ptd.Set(value)
 							DefaultData[pf.Name] = ptd
@@ -383,7 +391,8 @@ func match(path string, route Route) gin.HandlerFunc {
 }
 
 func ParamHandler(c *gin.Context, requestId string, p ParamsRo) reflect.Value {
-	replyv := reflect.New(p.Data.Elem())
+	//replyv := reflect.New(p.Data.Elem())
+	replyv := reflect.New(reflc.Direct(p.Data))
 	datan := replyv.Interface()
 	var err error
 	if p.dty == binding.JSON {
@@ -396,6 +405,7 @@ func ParamHandler(c *gin.Context, requestId string, p ParamsRo) reflect.Value {
 		slog.Error("获取用户参数失败", "error", err.Error(), "requestId", requestId)
 		panic(BaseHttpError{Code: StatusCodeCommonErr, ErrorCode: CodeParameterError, Message: CodeMessage[CodeParameterError]})
 	}
+
 	data := reflect.ValueOf(datan)
 
 	// 有设置默认值的  需要判断一下
@@ -411,6 +421,9 @@ func ParamHandler(c *gin.Context, requestId string, p ParamsRo) reflect.Value {
 				}
 			}
 		}
+	}
+	if p.Data.Kind() != reflect.Ptr {
+		data = data.Elem()
 	}
 	return data
 }

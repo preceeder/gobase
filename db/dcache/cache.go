@@ -9,9 +9,10 @@ package dcache
 
 import (
 	"github.com/fanjindong/go-cache"
+	"time"
 )
 
-var GoCache cache.ICache
+var GoCache BCache
 
 func init() {
 	initCache()
@@ -26,9 +27,36 @@ func initCache() {
 	//GoCache = dcache.NewMemCache(dcache.WithExpiredCallback(f))
 
 	ch := cache.NewMemCache()
-	GoCache = ch
+	GoCache = BCache{ch}
 	//c.Set("a", 1)
 	//c.Set("b", 1, dcache.WithEx(1*time.Second))
 	//c.Get("a") // 1, true
 	//c.Get("b") // nil, false
+}
+
+type BCache struct {
+	cache.ICache
+}
+
+// 加锁, 等待锁
+// exp ms
+
+func (bc BCache) WaitingLock(name string, exp int) bool {
+	for {
+		lastExp, ok := bc.Ttl(name)
+		if ok {
+			time.Sleep(lastExp)
+			continue
+		}
+		break
+	}
+	if exp == 0 {
+		exp = 30
+	}
+	bc.Set(name, 1, cache.WithEx(time.Duration(exp)*time.Millisecond))
+	return true
+}
+
+func (bc BCache) Unlock(name string) {
+	bc.Del(name)
 }

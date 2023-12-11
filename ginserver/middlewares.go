@@ -57,7 +57,14 @@ func GinLogger(serverLogHide bool) gin.HandlerFunc {
 	}
 }
 
-// GinRecovery recover掉项目可能出现的panic，并使用zap记录相关日志
+// 发生错误后 外部的处理
+var ginRecoveryMidFuncs = []func(c *gin.Context, code int, err any, trance string){}
+
+func PushGinRecoveryMidFunc(fc ...func(c *gin.Context, code int, err any, trance string)) {
+	ginRecoveryMidFuncs = append(ginRecoveryMidFuncs, fc...)
+}
+
+// GinRecovery recover掉项目可能出现的panic，并使用slog记录相关日志
 func GinRecovery() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		requestId := c.GetString("requestId")
@@ -69,8 +76,6 @@ func GinRecovery() gin.HandlerFunc {
 				c.JSON(he.GetCode(), he.GetMap())
 				ResStatus = he.GetCode()
 			}
-
-			//httpRequest, _ := httputil.DumpRequest(c.Request, true)
 			params := GetRequestParams(c)
 			slog.Error("Recovery from panic ",
 				"err", err,
@@ -80,7 +85,10 @@ func GinRecovery() gin.HandlerFunc {
 			)
 
 			c.AbortWithStatus(ResStatus)
-
+			// 可以对不同的 code 做其他处理
+			for _, f := range ginRecoveryMidFuncs {
+				f(c, ResStatus, err, trace)
+			}
 		})
 		c.Next()
 	}

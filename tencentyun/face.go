@@ -3,16 +3,17 @@ package tencentyun
 import (
 	"crypto/sha1"
 	"encoding/hex"
-	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/bytedance/sonic"
+	"github.com/fanjindong/go-cache"
 	"github.com/go-resty/resty/v2"
-	"github.com/preceeder/gobase/db/redisDb"
+	"github.com/preceeder/gobase/db/dcache"
 	"github.com/preceeder/gobase/utils"
 	"github.com/spf13/viper"
 	"golang.org/x/exp/maps"
 	"log/slog"
 	"slices"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -21,14 +22,20 @@ var TencentFaceClient *TencentFace
 var TencentFaceConfig tencentFaceConfig
 
 type tencentFaceConfig struct {
-	AppId        string `json:"appId"`
-	ServerSecret string `json:"serverSecret"`
+	Api struct {
+		SecretId  string `json:"secretId"`
+		SecretKey string `json:"secretKey"`
+	} `json:"api"`
+	Face struct {
+		AppId        string `json:"appId"`
+		ServerSecret string `json:"serverSecret"`
+	} `json:"face"`
 }
 
 func InitWithViper(config viper.Viper) {
 	utils.ReadViperConfig(config, "tencentyun", &TencentFaceConfig)
-	InitTencentFace(TencentFaceConfig.AppId, TencentFaceConfig.ServerSecret)
-	InitTencentFaceId(TencentFaceConfig.AppId, TencentFaceConfig.ServerSecret)
+	InitTencentFace(TencentFaceConfig.Face.AppId, TencentFaceConfig.Face.ServerSecret)
+	InitTencentFaceId(TencentFaceConfig.Api.SecretId, TencentFaceConfig.Api.SecretKey)
 }
 
 func InitTencentFace(appid string, serverSecret string) {
@@ -39,7 +46,7 @@ func NewTencentFaceClient(appid string, serverSecret string) *TencentFace {
 	return &TencentFace{
 		AppId:        appid,
 		ServerSecret: serverSecret,
-		RestyClient:  resty.New().SetTimeout(time.Duration(5 * time.Second)),
+		RestyClient:  resty.New().SetHeader("Content-Type", "application/json").SetTimeout(time.Duration(5 * time.Second)),
 	}
 }
 
@@ -49,7 +56,21 @@ type TencentFace struct {
 	RestyClient  *resty.Client
 }
 
-func (tf TencentFace) getTencentFaceAccessToken(ctx utils.Context) (accessToken string) {
+type FaceAccessTokenResponse struct {
+	Code            string `json:"code"`
+	Msg             string `json:"msg"`
+	TransactionTime string `json:"transactionTime"`
+	AccessToken     string `json:"access_token"`
+	ExpireTime      string `json:"expire_time"`
+	ExpireIn        int    `json:"expire_in"`
+}
+
+func (f FaceAccessTokenResponse) String() string {
+	res, _ := sonic.ConfigFastest.MarshalToString(f)
+	return res
+}
+
+func (tf TencentFace) getTencentFaceAccessToken(ctx utils.Context) (accessToken string, err error) {
 	// 获取access_token
 	url := "https://miniprogram-kyc.tencentcloudapi.com/api/oauth2/access_token"
 	params := map[string]string{
@@ -58,43 +79,47 @@ func (tf TencentFace) getTencentFaceAccessToken(ctx utils.Context) (accessToken 
 		"grant_type": "client_credential",
 		"version":    "1.0.0",
 	}
-	resp, err := tf.RestyClient.R().SetQueryParams(params).Get(url)
+	var fat = FaceAccessTokenResponse{}
+	_, err = tf.RestyClient.R().SetResult(&fat).SetQueryParams(params).Get(url)
 	if err != nil {
 		slog.Error("访问腾讯云access_token接口异常", "err", err, "requestId", ctx.RequestId)
 		return
 	}
-
-	var result map[string]any
-	err = json.Unmarshal(resp.Body(), &result)
-	if err != nil {
-		slog.Error("解析腾讯云access_token接口响应体失败", "err", err, "requestId", ctx.RequestId)
+	if fat.Code != "0" {
+		slog.Error("访问腾讯云access_token接口失败", "err", err, "result", fat, "requestId", ctx.RequestId)
+		err = errors.New(fat.String())
 		return
 	}
-	if result["code"] != "0" {
-		slog.Error("访问腾讯云access_token接口失败", "err", err, "requestId", ctx.RequestId)
-		return
-	}
-	str, ok := result["access_token"]
-	if !ok {
-		slog.Error("腾讯云access_token接口解析access_token参数失败", "err", err, "requestId", ctx.RequestId)
-	}
-	accessToken = str.(string)
+	accessToken = fat.AccessToken
 	return
 }
 
-func (tf TencentFace) getTencentFaceSignTicket(ctx utils.Context) (signTicket string) {
+type FaceSignTicketResponse struct {
+	Code            string `json:"code"`
+	Msg             string `json:"msg"`
+	TransactionTime string `json:"transactionTime"`
+	Tickets         []struct {
+		Value      string `json:"value"`
+		ExpireIn   int    `json:"expire_in"`
+		ExpireTime string `json:"expire_time"`
+	} `json:"tickets"`
+}
+
+func (f FaceSignTicketResponse) String() string {
+	res, _ := sonic.ConfigFastest.MarshalToString(f)
+	return res
+}
+func (tf TencentFace) getTencentFaceSignTicket(ctx utils.Context) (signTicket string, err error) {
 	// 获取签名钥匙
-	cmd, err := redisDb.Do(ctx, map[string]any{"cmd": "get {{redisKey}}"}, map[string]any{"redisKey": "tencentFaceSignTicket"})
-	if err != nil {
-		slog.Error("连接redis失败", "err", err, "requestId", ctx.RequestId)
-	} else {
-		signTicket, err = cmd.Text()
-		if err == nil {
-			return
-		}
+	cacheKey := "BASE_tencentFaceSignTicket"
+	sTicket, ok := dcache.GoCache.Get(cacheKey)
+	if ok && len(sTicket.(string)) > 0 {
+		signTicket = sTicket.(string)
+		return
 	}
-	accessToken := tf.getTencentFaceAccessToken(ctx)
-	if accessToken == "" {
+
+	accessToken, err := tf.getTencentFaceAccessToken(ctx)
+	if accessToken == "" || err != nil {
 		return
 	}
 	url := "https://miniprogram-kyc.tencentcloudapi.com/api/oauth2/api_ticket"
@@ -104,41 +129,31 @@ func (tf TencentFace) getTencentFaceSignTicket(ctx utils.Context) (signTicket st
 		"type":         "SIGN",
 		"version":      "1.0.0",
 	}
-	resp, err := tf.RestyClient.R().SetQueryParams(params).Get(url)
+	var signTi = FaceSignTicketResponse{}
+	_, err = tf.RestyClient.R().SetResult(&signTi).SetQueryParams(params).Get(url)
 	if err != nil {
 		slog.Error("访问腾讯云SignTicket接口异常", "err", err, "requestId", ctx.RequestId)
 		return
 	}
-	var result map[string]any
-	err = json.Unmarshal(resp.Body(), &result)
-	if err != nil {
-		slog.Error("解析腾讯云SignTicket接口响应体失败", "err", err, "requestId", ctx.RequestId)
+
+	if signTi.Code != "0" {
+		slog.Error("访问腾讯云SignTicket接口失败", "err", err, "result", signTi, "requestId", ctx.RequestId)
+		err = errors.New(signTi.String())
 		return
 	}
-	if result["code"] != "0" {
-		slog.Error("访问腾讯云SignTicket接口失败", "err", err, "requestId", ctx.RequestId)
-		return
-	}
-	tickets, ok := result["tickets"]
-	if !ok {
-		slog.Error("腾讯云SignTicket接口解析tickets参数失败", "err", err, "requestId", ctx.RequestId)
-		return
-	}
-	signTicket, ok = tickets.([]map[string]string)[0]["value"]
-	if !ok {
-		slog.Error("腾讯云SignTicket接口解析signTicket参数失败", "err", err, "requestId", ctx.RequestId)
-	}
-	_, err = redisDb.Do(ctx, map[string]any{"cmd": "set {{redisKey}} {{value}}", "key": "{{redisKey}}", "exp": time.Minute * 20}, map[string]any{"redisKey": "tencentFaceSignTicket", "value": signTicket})
-	if err != nil {
-		slog.Error("连接redis失败", "err", err, "requestId", ctx.RequestId)
-	}
+
+	signTicket = signTi.Tickets[0].Value
+	ok = dcache.GoCache.Set(cacheKey, signTicket, cache.WithEx(time.Second*60*20))
+
 	return
 }
 
-func (tf TencentFace) cookTencentSign(ctx utils.Context, userId string, nonce string) (sign string) {
+// 获取face id的时候 需要userId, 不需要orderNo
+// 获取结果的时候 需要 orderNo 不需要 userId
+func (tf TencentFace) cookTencentSign(ctx utils.Context, userId, orderNo, nonce string) (sign string, err error) {
 	// 制作签名
-	signTicket := tf.getTencentFaceSignTicket(ctx)
-	if signTicket == "" {
+	signTicket, err := tf.getTencentFaceSignTicket(ctx)
+	if signTicket == "" || err != nil {
 		slog.Error("获取signTicket失败", "requestId", ctx.RequestId)
 		return
 	}
@@ -154,6 +169,13 @@ func (tf TencentFace) cookTencentSign(ctx utils.Context, userId string, nonce st
 		"ticket":  signTicket,
 		"nonce":   nonce,
 	}
+
+	if len(userId) > 0 {
+		signParams["userId"] = userId
+	} else if len(orderNo) > 0 {
+		signParams["orderNo"] = orderNo
+	}
+
 	values := maps.Values(signParams)
 	slices.Sort(values)
 	str := strings.Join(values, "")
@@ -171,12 +193,31 @@ type TencentFaceIdResult struct {
 	OpenAPISign   string `json:"openApiSign"`
 }
 
-func (tf TencentFace) GetTencentFaceId(ctx utils.Context, userId string, imgBase64 string, orderNo string) any {
+type TencentFaceIdResponse struct {
+	Code     string `json:"code"`
+	Msg      string `json:"msg"`
+	BizSeqNo string `json:"bizSeqNo"`
+	Result   struct {
+		BizSeqNo        string `json:"bizSeqNo"`
+		TransactionTime string `json:"transactionTime"`
+		OrderNo         string `json:"orderNo"`
+		FaceID          string `json:"faceId"`
+		Success         bool   `json:"success"`
+	} `json:"result"`
+	TransactionTime string `json:"transactionTime"`
+}
+
+func (f TencentFaceIdResponse) String() string {
+	res, _ := sonic.ConfigFastest.MarshalToString(f)
+	return res
+}
+
+func (tf TencentFace) GetTencentFaceId(ctx utils.Context, userId string, imgBase64 string, orderNo string) (any, error) {
 	// 人脸核身faceId获取
 	nonce := utils.GenterWithoutRepetitionStr(32)
-	sign := tf.cookTencentSign(ctx, userId, nonce)
+	sign, err := tf.cookTencentSign(ctx, userId, "", nonce)
 	if sign == "" {
-		return nil
+		return nil, err
 	}
 	data := map[string]string{
 		"webankAppId":     tf.AppId,
@@ -188,40 +229,59 @@ func (tf TencentFace) GetTencentFaceId(ctx utils.Context, userId string, imgBase
 		"sign":            sign,
 		"nonce":           nonce,
 	}
-	resp, err := tf.RestyClient.R().SetHeader("Content-Type", "application/json").SetFormData(data).Post(fmt.Sprintf("https://miniprogram-kyc.tencentcloudapi.com/api/server/getfaceid?orderNo=%s", orderNo))
+	var tfir = TencentFaceIdResponse{}
+	_, err = tf.RestyClient.R().SetResult(&tfir).
+		SetBody(data).
+		Post(fmt.Sprintf("https://miniprogram-kyc.tencentcloudapi.com/api/server/getfaceid?orderNo=%s", orderNo))
 	if err != nil {
 		slog.Error("获取人脸认证token失败", "err", err, "requestId", ctx.RequestId)
-		return nil
+		return nil, err
 	}
-	var result map[string]any
-	err = json.Unmarshal(resp.Body(), &result)
-	if result["code"] != "0" {
-		slog.Error("访问腾讯云faceId接口失败", "err", err, "requestId", ctx.RequestId)
-		return nil
+	//slog.Info("", "result", resp.Result().(*TencentFaceIdResponse))
+	if tfir.Code != "0" {
+		slog.Error("访问腾讯云faceId接口失败", "err", err, "result", tfir, "requestId", ctx.RequestId)
+		return nil, errors.New(tfir.String())
 	}
-	results, ok := result["result"]
-	if !ok {
-		slog.Error("腾讯云faceId接口解析faceId参数失败", "err", err, "requestId", ctx.RequestId)
-		return nil
-	}
-	faceId, ok := results.(map[string]string)["faceId"]
-	if !ok {
-		slog.Error("腾讯云faceId接口解析faceId参数失败", "err", err, "requestId", ctx.RequestId)
-		return nil
-	}
+
+	faceId := tfir.Result.FaceID
+
 	return TencentFaceIdResult{
 		FaceID:        faceId,
 		AgreementNo:   orderNo,
 		OpenAPINonce:  nonce,
 		OpenAPIUserID: userId,
 		OpenAPISign:   sign,
-	}
+	}, nil
 }
 
-func (tf TencentFace) GetTencentFaceResult(ctx utils.Context, userId string, orderNo string) (similarity float64, ok bool) {
+type TencentFaceResultResponse struct {
+	Code     string `json:"code"`
+	Msg      string `json:"msg"`
+	BizSeqNo string `json:"bizSeqNo"`
+	Result   struct {
+		OrderNo      string `json:"orderNo"`
+		LiveRate     string `json:"liveRate"`
+		Similarity   string `json:"similarity"`
+		OccurredTime string `json:"occurredTime"`
+		AppID        string `json:"appId"`
+		Photo        string `json:"photo"`
+		Video        string `json:"video"`
+		BizSeqNo     string `json:"bizSeqNo"`
+		SdkVersion   string `json:"sdkVersion"`
+		TrtcFlag     string `json:"trtcFlag"`
+	} `json:"result"`
+	TransactionTime string `json:"transactionTime"`
+}
+
+func (f TencentFaceResultResponse) String() string {
+	res, _ := sonic.ConfigFastest.MarshalToString(f)
+	return res
+}
+
+func (tf TencentFace) GetTencentFaceResult(ctx utils.Context, userId string, orderNo string) (similarity TencentFaceResultResponse, err error) {
 	// 人脸核身结果查询
 	nonce := utils.GenterWithoutRepetitionStr(32)
-	sign := tf.cookTencentSign(ctx, userId, nonce)
+	sign, err := tf.cookTencentSign(ctx, "", orderNo, nonce)
 	if sign == "" {
 		return
 	}
@@ -233,29 +293,16 @@ func (tf TencentFace) GetTencentFaceResult(ctx utils.Context, userId string, ord
 		"sign":    sign,
 	}
 	url := fmt.Sprintf("https://miniprogram-kyc.tencentcloudapi.com/api/v2/base/queryfacerecord?orderNo=%s", orderNo)
-	resp, err := tf.RestyClient.R().SetFormData(data).Post(url)
+
+	similarity = TencentFaceResultResponse{}
+	_, err = tf.RestyClient.R().SetResult(&similarity).SetBody(data).Post(url)
 	if err != nil {
 		return
 	}
-	var result map[string]any
-	err = json.Unmarshal(resp.Body(), &result)
-	if result["code"] != "0" {
-		slog.Error("访问腾讯云人脸核身结果查询接口失败", "err", err, "requestId", ctx.RequestId)
+	if similarity.Code != "0" {
+		slog.Error("访问腾讯云人脸核身结果查询接口失败", "err", err, "result", similarity, "requestId", ctx.RequestId)
 		return
 	}
-	results, ok := result["result"]
-	if !ok {
-		slog.Error("访问腾讯云人脸核身结果查询接口获取similarity失败", "err", err, "requestId", ctx.RequestId)
-		return
-	}
-	res, ok := results.(map[string]string)["similarity"]
-	if !ok {
-		slog.Error("访问腾讯云人脸核身结果查询接口获取similarity失败", "err", err, "requestId", ctx.RequestId)
-		return
-	}
-	similarity, err = strconv.ParseFloat(res, 64)
-	if err != nil {
-		return
-	}
-	return similarity, true
+
+	return similarity, nil
 }

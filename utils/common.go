@@ -11,6 +11,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
 	"os"
+	"strings"
 )
 
 /** 将viper 配置读渠道 target 结构体中
@@ -23,4 +24,16 @@ func ReadViperConfig(v viper.Viper, key string, target any) {
 	}
 
 	return
+}
+
+var CurrentPwd, ProjectName = "", ""
+
+func GetWd() (string, string) {
+	if len(CurrentPwd) > 0 {
+		return CurrentPwd, ProjectName
+	}
+	CurrentPwd, _ = os.Getwd()
+	pl := strings.Split(CurrentPwd, "/")
+	ProjectName = pl[len(pl)-1]
+	return CurrentPwd, ProjectName
 }

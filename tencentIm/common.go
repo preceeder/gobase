@@ -16,10 +16,10 @@ var TencentImHost = "https://console.tim.qq.com"
 
 // im 部分常用接口
 var ApiMap = map[string]string{
-	"AccountImport":      "/v4/im_open_login_svc/account_import", // 导入单个账号
-	"MultiaccountImport": "/v4/im_open_login_svc/multiaccount_import",
-	"AccountDelete":      "/v4/im_open_login_svc/account_delete", // 删除账号
-	"AccountCheck":       "/v4/im_open_login_svc/account_check",  // 查询账号
+	"AccountImport":      "/v4/im_open_login_svc/account_import",      // 导入单个账号
+	"MultiAccountImport": "/v4/im_open_login_svc/multiaccount_import", // 批量导入账号
+	"AccountDelete":      "/v4/im_open_login_svc/account_delete",      // 删除账号
+	"AccountCheck":       "/v4/im_open_login_svc/account_check",       // 查询账号
 
 	"SendMsg":      "/v4/openim/sendmsg",           // 发送单聊消息
 	"BatchSendMsg": "/v4/openim/batchsendmsg",      // 批量发送单聊消息
@@ -162,7 +162,7 @@ type MsgBody struct {
 	//TIMVideoFileElem（视频消息）
 	MsgType string `json:"MsgType"`
 	//对于每种 MsgType 用不同的 MsgContent 格式，具体可参考 消息格式描述
-	MsgContent MsgContent `json:"MsgContent"`
+	MsgContent any `json:"MsgContent"`
 }
 type OfflinePushInfo struct {
 	//0：表示推送

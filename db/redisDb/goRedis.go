@@ -25,6 +25,7 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/duke-git/lancet/v2/convertor"
 	"github.com/duke-git/lancet/v2/cryptor"
+	"github.com/preceeder/gobase/try"
 	"github.com/preceeder/gobase/utils"
 	"github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
@@ -149,7 +150,8 @@ func getScriptKv[T string | any](context2 utils.Context, mm map[string]any, kmm 
 			} else if kv, ok := fData[kddd]; ok {
 				sk = append(sk, kv.(T))
 			} else {
-				slog.Error("ExecScript error", "requestId", context2.RequestId, "error", "keys key is not enough", "key", kddd)
+				lastFunc := try.GetStackTrace("getScriptKv", 2)
+				slog.Error("ExecScript error", "lastFunc", lastFunc, "requestId", context2.RequestId, "error", "keys key is not enough", "key", kddd)
 				return nil, utils.BaseRunTimeError{ErrorCode: 500, Message: "redis error"}
 			}
 		}
@@ -185,7 +187,8 @@ func ExecScript(context2 utils.Context, sc map[string]any, keys map[string]strin
 	tdb := sc["db"].(string)
 	rd, err := getDb(&tdb)
 	if err != nil {
-		slog.Error(err.Error(), "requestId", context2.RequestId)
+		lastFunc := try.GetStackTrace("ExecScript", 1)
+		slog.Error(err.Error(), "lastFunc", lastFunc, "requestId", context2.RequestId)
 		panic(err)
 	}
 	var fData = make(map[string]any)
@@ -206,7 +209,6 @@ func ExecScript(context2 utils.Context, sc map[string]any, keys map[string]strin
 	sk, err := getScriptKv(context2, sc, "keys", keys, fData)
 	if err != nil {
 		slog.Error("redis script error", "error", err.Error(), "requestId", context2.RequestId)
-
 		panic(utils.BaseRunTimeError{ErrorCode: 500, Message: "redis error1"})
 	}
 	argvs, err := getScriptKv(context2, sc, "argv", values, fData)
@@ -239,21 +241,24 @@ func Script(ctx utils.Context, db *redis.Client, script string, keys []string, v
 	}
 	ns, err := rd.ScriptExists(ctx, hesHasScript).Result()
 	if err != nil {
-		slog.Error("ScriptExists error", "error", err.Error(), "requestId", ctx.RequestId)
+		lastFunc := try.GetStackTrace("redisDb.Script", 2)
+		slog.Error("ScriptExists error", "lastFunc", lastFunc, "error", err.Error(), "requestId", ctx.RequestId)
 		return nil, err
 	}
 	//不存在则加载
 	if !ns[0] {
 		_, err := rd.ScriptLoad(ctx, script).Result()
 		if err != nil {
-			slog.Error("ScriptLoad error", "error", err.Error(), "script", script, "requestId", ctx.RequestId)
+			lastFunc := try.GetStackTrace("redisDb.Script", 2)
+			slog.Error("ScriptLoad error", "lastFunc", lastFunc, "error", err.Error(), "script", script, "requestId", ctx.RequestId)
 			return nil, err
 		}
 	}
 	rcmd := rd.EvalSha(ctx, hesHasScript, keys, values...)
 	err = rcmd.Err()
 	if err != nil {
-		slog.Error("EvalSha error", "error", err.Error(), "keys", keys, "values", values, "requestId", ctx.RequestId)
+		lastFunc := try.GetStackTrace("redisDb.Script", 2)
+		slog.Error("EvalSha error", "lastFunc", lastFunc, "error", err.Error(), "keys", keys, "values", values, "requestId", ctx.RequestId)
 		return nil, err
 	}
 	return rcmd, nil
@@ -286,7 +291,8 @@ func Do(ctx utils.Context, cmd map[string]any, agrs map[string]any, includeArgs 
 	}
 	rcmd := rd.Do(ctx, cmdStr...)
 	if rcmd.Err() != nil {
-		slog.Error("redisDb exec failed", "error", rcmd.Err().Error(), "cmd", cmdStr, "requestId", ctx.RequestId)
+		lastFunc := try.GetStackTrace("redisDb.Do", 1)
+		slog.Error("redisDb exec failed", "lastFunc", lastFunc, "error", rcmd.Err().Error(), "cmd", cmdStr, "requestId", ctx.RequestId)
 		return nil, rcmd.Err()
 	}
 
@@ -308,7 +314,8 @@ func Do(ctx utils.Context, cmd map[string]any, agrs map[string]any, includeArgs 
 
 		rkey, ok := cmd["key"]
 		if !ok {
-			slog.Error("set exp, cmd must has key", "cmd", cmd["cmd"], "requestId", ctx.RequestId)
+			lastFunc := try.GetStackTrace("redisDb.Do", 1)
+			slog.Error("set exp, cmd must has key", "lastFunc", lastFunc, "cmd", cmd["cmd"], "requestId", ctx.RequestId)
 			panic("set exp, cmd must has key")
 		}
 		keyStr, err := utils.StrBindName(rkey.(string), agrs, []byte(""))
@@ -318,7 +325,8 @@ func Do(ctx utils.Context, cmd map[string]any, agrs map[string]any, includeArgs 
 		}
 		err = rd.Expire(ctx, keyStr, expt).Err()
 		if err != nil {
-			slog.Error("redisDb key set exp err: "+err.Error(), "key", keyStr, "exp", expt, "requestId", ctx.RequestId)
+			lastFunc := try.GetStackTrace("redisDb.Do", 1)
+			slog.Error("redisDb key set exp err: "+err.Error(), "lastFunc", lastFunc, "key", keyStr, "exp", expt, "requestId", ctx.RequestId)
 			panic("redisDb key set exp err: " + err.Error())
 		}
 	}
@@ -350,13 +358,14 @@ func (r *RedisLocks) GetLock(db ...string) bool {
 	}
 
 	if r.Exp == 0 {
-		r.Exp = 5
+		r.Exp = 500
 	}
 
-	expl := time.Duration(r.Exp * 1000000)
+	expl := time.Millisecond * time.Duration(r.Exp)
 	res, err := r.db.SetNX(ctx, r.Key, r.Value, expl).Result()
 	if err != nil {
-		slog.Error("redisDb 加锁失败 key: "+r.Key+"err: "+err.Error(), "requestId", r.Context2.GetString("requestId"))
+		lastFunc := try.GetStackTrace("redisDb.(*RedisLocks).GetLock", 1)
+		slog.Error("redisDb 加锁失败 key: "+r.Key+"err: "+err.Error(), "lastFunc", lastFunc, "requestId", r.Context2.GetString("requestId"))
 		panic("redisDb 加锁失败 key: " + r.Key + "err: " + err.Error())
 	}
 	return res
