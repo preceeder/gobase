@@ -282,7 +282,7 @@ func (s ShuMei) Image(ctx utils.Context, p ShumeiImage) (bool, *PublicLongRespon
 //
 //	传了callBackUrl  就是走回调
 func (s ShuMei) MultiImage(ctx utils.Context, p ShumeiMultiImage) (bool, *PublicLongResponse) {
-	turl := s.ShumeiUrl.ImageUrl //  "http://api-img-sh.fengkongcloud.com/image/v4"
+	turl := s.ShumeiUrl.MultiImageUrl //  "http://api-img-sh.fengkongcloud.com/image/v4"
 
 	data := map[string]interface{}{
 		"tokenId":        s.tokenHandler(p.UserId),
