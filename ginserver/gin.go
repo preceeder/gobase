@@ -25,15 +25,3 @@ func InitGinWithViperConfig(config viper.Viper) {
 	//GinConfig = readServerConfig(config)
 	utils.ReadViperConfig(config, "gin", &GinConfig)
 }
-
-//func readServerConfig(config viper.Viper) ServerConfig {
-//	sc := config.Sub("server")
-//	if sc == nil {
-//		fmt.Printf("gin config is nil")
-//		os.Exit(1)
-//	}
-//	return ServerConfig{
-//		Name: sc.GetString("name"),
-//		Addr: sc.GetString("addr"),
-//	}
-//}

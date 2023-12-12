@@ -14,11 +14,12 @@ import (
 )
 
 type Config struct {
-	AppKey    string `json:"appKey"` // 生成token 的时候需要
-	AccessKey string `json:"accessKey"`
-	SecretKey string `json:"secretKey"`
-	AppId     string `json:"appId"`
-	Region    string `json:"region"` // 华北 cn-north-1 | 新加坡 ap-singapore-1 | 美国 us-east-1
+	AppKey            string `json:"appKey"` // 生成token 的时候需要
+	AccessKey         string `json:"accessKey"`
+	SecretKey         string `json:"secretKey"`
+	AppId             string `json:"appId"`
+	Region            string `json:"region"`            // 华北 cn-north-1 | 新加坡 ap-singapore-1 | 美国 us-east-1
+	CallBackSecretKey string `json:"callBackSecretKey"` // 回调签名密钥, 验证密钥
 }
 
 func init() {

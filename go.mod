@@ -5,12 +5,10 @@ go 1.21.0
 require (
 	github.com/alibabacloud-go/darabonba-number v1.0.4
 	github.com/alibabacloud-go/darabonba-openapi/v2 v2.0.2
-	github.com/alibabacloud-go/facebody-20191230 v1.1.12
 	github.com/alibabacloud-go/facebody-20191230/v4 v4.0.8
 	github.com/alibabacloud-go/push-20160801/v2 v2.0.2
 	github.com/alibabacloud-go/tea v1.1.19
-	github.com/alibabacloud-go/tea-rpc v1.3.3
-	github.com/alibabacloud-go/tea-utils v1.3.6
+	github.com/alibabacloud-go/tea-utils/v2 v2.0.1
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.9+incompatible
 	github.com/aliyun/credentials-go v1.1.2
 	github.com/bytedance/sonic v1.10.0
@@ -23,6 +21,7 @@ require (
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/golang-jwt/jwt/v5 v5.0.0
 	github.com/golang-module/carbon/v2 v2.2.5
+	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/nsqio/go-nsq v1.1.0
@@ -55,13 +54,11 @@ require (
 	github.com/alibabacloud-go/debug v0.0.0-20190504072949-9472017b5c68 // indirect
 	github.com/alibabacloud-go/endpoint-util v1.1.0 // indirect
 	github.com/alibabacloud-go/openapi-util v0.1.0 // indirect
-	github.com/alibabacloud-go/openplatform-20191219 v1.1.5 // indirect
 	github.com/alibabacloud-go/openplatform-20191219/v2 v2.0.1 // indirect
 	github.com/alibabacloud-go/tea-fileform v1.1.1 // indirect
 	github.com/alibabacloud-go/tea-oss-sdk v1.1.3 // indirect
 	github.com/alibabacloud-go/tea-oss-utils v1.1.0 // indirect
-	github.com/alibabacloud-go/tea-rpc-utils v1.1.2 // indirect
-	github.com/alibabacloud-go/tea-utils/v2 v2.0.1 // indirect
+	github.com/alibabacloud-go/tea-utils v1.3.6 // indirect
 	github.com/alibabacloud-go/tea-xml v1.1.2 // indirect
 	github.com/astaxie/beego v1.12.0 // indirect
 	github.com/benbjohnson/clock v1.1.0 // indirect

@@ -9,13 +9,16 @@ package grpcm
 
 import (
 	"fmt"
+	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/preceeder/gobase/utils"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/backoff"
 	"google.golang.org/grpc/reflection"
 	"log/slog"
 	"net"
 	"os"
+	"time"
 )
 
 type RpcConfig struct {
@@ -80,7 +83,23 @@ func Server(server *grpc.Server) {
 }
 
 func Client(interceptor ...grpc.UnaryClientInterceptor) *grpc.ClientConn {
-	clt, err := grpc.Dial(rcpConfig.Addr, grpc.WithInsecure(), grpc.WithChainUnaryInterceptor(interceptor...))
+	opts := []grpc.DialOption{
+		grpc.WithInsecure(),
+		grpc.WithConnectParams(grpc.ConnectParams{
+			Backoff: backoff.Config{
+				BaseDelay:  time.Second * 1,
+				Multiplier: 1.6,
+				MaxDelay:   time.Second * 15,
+			},
+			MinConnectTimeout: time.Second * 15,
+		}),
+		grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(
+			grpc_retry.WithMax(10),
+			grpc_retry.WithBackoff(grpc_retry.BackoffExponential(1*time.Second)),
+		)),
+		grpc.WithChainUnaryInterceptor(interceptor...),
+	}
+	clt, err := grpc.Dial(rcpConfig.Addr, opts...)
 	if err != nil {
 		slog.Error("连接 gPRC 服务失败", "error", err)
 	}

@@ -7,12 +7,16 @@
 package volc
 
 import (
+	"crypto/sha256"
+	"fmt"
 	"github.com/preceeder/gobase/utils"
 	"github.com/spf13/viper"
 	rtcbase "github.com/volcengine/volc-sdk-golang/base"
 	"github.com/volcengine/volc-sdk-golang/service/rtc"
 	"log/slog"
 	"net/url"
+	"sort"
+	"strings"
 	"time"
 )
 
@@ -76,4 +80,17 @@ func (v VoclClientA) CloseRoom(roomId, appId, userId, forbiddenInterval string) 
 		slog.Info("CloseRoom", "res", res, "status", status, "err", err)
 	}
 	return err
+}
+
+// 验证签名
+func (v VoclClientA) CheckSignature(event []string, Signature, secretKey string) bool {
+	if secretKey == "" {
+		secretKey = v.Config.CallBackSecretKey
+	}
+	data := append(event, secretKey)
+	sort.Strings(data)
+	payload := strings.Join(data, "")
+	hashData := sha256.Sum256([]byte(payload))
+	signature := fmt.Sprintf("%x", hashData)
+	return signature == Signature
 }
