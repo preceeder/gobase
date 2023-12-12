@@ -290,7 +290,6 @@ func (s ShuMei) MultiImage(ctx utils.Context, p ShumeiMultiImage) (bool, *Public
 		"lang":           s.imageLangHandler(p.Lang),
 	}
 
-	data["imgs"] = ""
 	imgs := []map[string]string{}
 	for _, img := range p.ImageUrl {
 		imgs = append(imgs, map[string]string{
@@ -298,7 +297,7 @@ func (s ShuMei) MultiImage(ctx utils.Context, p ShumeiMultiImage) (bool, *Public
 			"btId": cryptor.Md5String(img)[8:],
 		})
 	}
-
+	data["imgs"] = imgs
 	if p.Ip != "" {
 		data["ip"] = p.Ip
 	}
