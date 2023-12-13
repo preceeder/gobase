@@ -14,6 +14,12 @@ import (
 
 func NewRequestClient() *resty.Client {
 	var RequestClient = resty.New()
+	RequestClient.SetHeaders(
+		map[string]string{
+			"Content-Type": "application/json",
+			"Accept":       "application/json",
+		},
+	)
 	RequestClient.SetTimeout(3 * time.Second)
 	RequestClient.SetTransport(&http.Transport{
 		MaxIdleConnsPerHost:   100,              // 对于每个主机，保持最大空闲连接数为 10

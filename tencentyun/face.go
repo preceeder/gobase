@@ -212,12 +212,13 @@ func (f TencentFaceIdResponse) String() string {
 	return res
 }
 
-func (tf TencentFace) GetTencentFaceId(ctx utils.Context, userId string, imgBase64 string, orderNo string) (any, error) {
+func (tf TencentFace) GetTencentFaceId(ctx utils.Context, userId string, imgBase64 string, orderNo string) (TencentFaceIdResponse, any, error) {
 	// 人脸核身faceId获取
+	var tfir = TencentFaceIdResponse{}
 	nonce := utils.GenterWithoutRepetitionStr(32)
 	sign, err := tf.cookTencentSign(ctx, userId, "", nonce)
 	if sign == "" {
-		return nil, err
+		return tfir, nil, err
 	}
 	data := map[string]string{
 		"webankAppId":     tf.AppId,
@@ -229,23 +230,22 @@ func (tf TencentFace) GetTencentFaceId(ctx utils.Context, userId string, imgBase
 		"sign":            sign,
 		"nonce":           nonce,
 	}
-	var tfir = TencentFaceIdResponse{}
 	_, err = tf.RestyClient.R().SetResult(&tfir).
 		SetBody(data).
 		Post(fmt.Sprintf("https://miniprogram-kyc.tencentcloudapi.com/api/server/getfaceid?orderNo=%s", orderNo))
 	if err != nil {
 		slog.Error("获取人脸认证token失败", "err", err, "requestId", ctx.RequestId)
-		return nil, err
+		return tfir, nil, err
 	}
 	//slog.Info("", "result", resp.Result().(*TencentFaceIdResponse))
 	if tfir.Code != "0" {
 		slog.Error("访问腾讯云faceId接口失败", "err", err, "result", tfir, "requestId", ctx.RequestId)
-		return nil, errors.New(tfir.String())
+		return tfir, nil, errors.New(tfir.String())
 	}
 
 	faceId := tfir.Result.FaceID
 
-	return TencentFaceIdResult{
+	return tfir, TencentFaceIdResult{
 		FaceID:        faceId,
 		AgreementNo:   orderNo,
 		OpenAPINonce:  nonce,
