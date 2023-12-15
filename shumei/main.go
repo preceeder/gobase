@@ -8,6 +8,7 @@ Change Activity:
 package shumei
 
 import (
+	"fmt"
 	"github.com/bytedance/sonic"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/duke-git/lancet/v2/cryptor"
@@ -520,7 +521,7 @@ func (s ShuMei) AudioStream(ctx utils.Context, p ShumeiAsyncAudioStream) (bool, 
 		"streamType":       p.StreamType,
 		"returnAllText":    p.ReturnAllText,
 		"room":             p.RoomId,
-		"returnFinishInfo": 1,
+		"returnFinishInfo": p.ReturnFinishInfo,
 		"audioDetectStep":  p.AudioDetectStep,
 		"extra":            map[string]any{"passThrough": p.ThroughParams},
 	}
@@ -574,6 +575,8 @@ func (s ShuMei) VideoStream(ctx utils.Context, p ShumeiAsyncVideoStream) (bool, 
 		"room":             p.RoomId,
 		"returnFinishInfo": p.ReturnFinishInfo,
 		"detectFrequency":  p.DetectFrequency, // 通知的频次   秒/次
+		"returnAllImg":     p.ReturnAllImg,
+		"returnAllText":    p.ReturnAllText,
 		//"audioDetectStep":  20,
 		"extra": map[string]any{"passThrough": p.ThroughParams},
 	}
@@ -606,6 +609,8 @@ func (s ShuMei) VideoStream(ctx utils.Context, p ShumeiAsyncVideoStream) (bool, 
 	}
 
 	res := &AudioStreamResponse{}
+	fmt.Println(sonic.ConfigFastest.MarshalToString(payload))
+
 	_, err := s.Send(turl, payload, res)
 	if err != nil {
 		slog.Error("shumei AsyncVoiceFile request", "error", err.Error(), "requestId", ctx.RequestId)

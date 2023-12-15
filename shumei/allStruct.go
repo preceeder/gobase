@@ -68,18 +68,19 @@ type ShumeiAsyncVideoFile struct {
 
 // 只有异步
 type ShumeiAsyncAudioStream struct {
-	RtcParams       map[string]any
-	StreamType      string // 目前默认值 ZEGO
-	UserId          string
-	ReceiveTokenId  string
-	VoiceType       string
-	EventId         string
-	Callback        string
-	Lang            string
-	AudioDetectStep int
-	RoomId          string
-	ReturnAllText   int // 0：返回风险等级为非pass的音频片段  1：返回所有风险等级的音频片段   默认0
-	ThroughParams   map[string]any
+	RtcParams        map[string]any
+	StreamType       string // 目前默认值 ZEGO
+	UserId           string
+	ReceiveTokenId   string
+	VoiceType        string
+	EventId          string
+	Callback         string
+	Lang             string
+	AudioDetectStep  int
+	RoomId           string
+	ReturnAllText    int // 0：返回风险等级为非pass的音频片段  1：返回所有风险等级的音频片段   默认0
+	ReturnFinishInfo int
+	ThroughParams    map[string]any
 }
 
 // 只有异步
@@ -91,6 +92,8 @@ type ShumeiAsyncVideoStream struct {
 	EventId        string
 	ImgCallback    string // 视频流只检查 画面
 	AudioCallback  string // 音频画面
+	ReturnAllImg   int
+	ReturnAllText  int
 	//Callback       string
 	ReturnFinishInfo int
 	Lang             string
