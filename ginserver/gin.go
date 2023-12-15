@@ -17,6 +17,8 @@ var GinConfig ServerConfig
 type ServerConfig struct {
 	Name                string `json:"name"`
 	Addr                string `json:"addr"`
+	TokenSignKey        string `json:"tokenSignKey"`
+	TokenAesKey         string `json:"tokenAesKey"`
 	HideServerMiddleLog bool   `json:"hideServerMiddleLog"` // 是否隐藏内置中间件的 http 日志
 }
 
