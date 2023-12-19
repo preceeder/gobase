@@ -10,7 +10,6 @@ package try
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"runtime"
 	"slices"
 	"strings"
@@ -30,14 +29,12 @@ var JumpPackage = []string{"try.CatchException", "gin.(*Context).Next", "gin.(*E
 // 打印全部堆栈信息
 func printStackTrace(err any) string {
 	buf := new(bytes.Buffer)
-	pwd, _ := os.Executable()
-	fmt.Fprintf(buf, "%v --> ", err)
+	fmt.Fprintf(buf, "%v \n ", err)
 	isu := false
 	for i := 1; true; i++ {
 		pc, file, line, ok := runtime.Caller(i)
 		if !ok {
-			file = strings.TrimPrefix(file, pwd)
-			fmt.Fprintf(buf, "%s:%d", file, line)
+			fmt.Fprintf(buf, "%s:%d \n ", file, line)
 			break
 		} else {
 			prevFunc := runtime.FuncForPC(pc).Name()
@@ -48,8 +45,7 @@ func printStackTrace(err any) string {
 			} else {
 				names := strings.Split(prevFunc, "/")
 				if !slices.Contains(JumpPackage, names[len(names)-1]) {
-					file = strings.TrimPrefix(file, pwd)
-					fmt.Fprintf(buf, "%s:%d --> ", file, line)
+					fmt.Fprintf(buf, "%s:%d \n ", prevFunc, line)
 				}
 			}
 		}
@@ -63,11 +59,9 @@ func printStackTrace(err any) string {
 func GetStackTrace(funcName string, step int) string {
 	buf := new(bytes.Buffer)
 	isu := false
-	pwd, _ := os.Executable()
 	for i := 1; true; i++ {
 		pc, file, line, ok := runtime.Caller(i)
 		if !ok {
-			file = strings.TrimPrefix(file, pwd)
 			fmt.Fprintf(buf, "%s:%d", file, line)
 			break
 		} else {
@@ -79,11 +73,7 @@ func GetStackTrace(funcName string, step int) string {
 				continue
 			}
 			if step > 0 {
-				file = strings.TrimPrefix(file, pwd)
-				fmt.Fprintf(buf, "%s:%d ", file, line)
-				if step > 1 {
-					fmt.Fprintf(buf, " --> ")
-				}
+				fmt.Fprintf(buf, "%s:%d \n ", prevFunc, line)
 				step -= 1
 				continue
 			}
