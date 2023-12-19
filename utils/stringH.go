@@ -77,6 +77,13 @@ func StrBindName(str string, args map[string]any, spacing []byte) (temPs string,
 	//fmt.Println(temPs)
 }
 
+// 获取字符串的 长度
 func StringLen(str string) int {
 	return utf8.RuneCountInString(str)
+}
+
+// 获取字符串的 字串
+func GetSubString(str string, start, end int) string {
+	sn := []rune(str)
+	return string(sn[start:end])
 }
