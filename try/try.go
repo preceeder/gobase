@@ -39,13 +39,13 @@ func printStackTrace(err any) string {
 		} else {
 			prevFunc := runtime.FuncForPC(pc).Name()
 			if !isu {
-				if strings.Contains(prevFunc, "try.CatchException") {
+				if strings.Contains(file, "try.CatchException") {
 					isu = true
 				}
 			} else {
 				names := strings.Split(prevFunc, "/")
 				if !slices.Contains(JumpPackage, names[len(names)-1]) {
-					fmt.Fprintf(buf, "%s:%d \n ", prevFunc, line)
+					fmt.Fprintf(buf, "%s:%d \n ", file, line)
 				}
 			}
 		}
