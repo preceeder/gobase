@@ -14,15 +14,21 @@ import (
 	"time"
 )
 
+var DefaultHeaders = map[string]string{
+	"Access-Control-Allow-Origin":      "*",
+	"Access-Control-Allow-Methods":     "OPTIONS,GET,POST,PUT,DELETE",
+	"Access-Control-Allow-Headers":     "Content-Length,Access-Control-Allow-Origin,Access-Control-Allow-Headers,Cache-Control,Content-Language,Content-Type,x-auth-version,x-auth-channel,x-auth-channel-detail,x-auth-package,x-auth-timestamp,x-auth-announce,x-auth-token,x-auth-app,x-auth-signature",
+	"Access-Control-Expose-Headers":    "Content-Length,Access-Control-Allow-Origin,Access-Control-Allow-Headers,Cache-Control,Content-Language,Content-Type",
+	"Access-Control-Allow-Credentials": "true",
+}
+
 func Cors() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		method := c.Request.Method
 
-		c.Header("Access-Control-Allow-Origin", "*") // 可将将 * 替换为指定的域名
-		c.Header("Access-Control-Allow-Methods", "*")
-		c.Header("Access-Control-Allow-Headers", "*")
-		c.Header("Access-Control-Expose-Headers", "Content-Length,Access-Control-Allow-Origin,Access-Control-Allow-Headers,Cache-Control,Content-Language,Content-Type")
-		c.Header("Access-Control-Allow-Credentials", "true")
+		for key, value := range DefaultHeaders {
+			c.Header(key, value) // 可将将 * 替换为指定的域名`
+		}
 
 		if method == "OPTIONS" {
 			c.AbortWithStatus(http.StatusOK)
