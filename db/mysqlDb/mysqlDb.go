@@ -11,6 +11,7 @@ import (
 	"github.com/preceeder/gobase/utils"
 	"github.com/spf13/viper"
 	"log/slog"
+	"reflect"
 	"strings"
 )
 
@@ -215,10 +216,9 @@ func (s Sdb) Update(ctx utils.Context, params map[string]any, tx ...*sqlx.Tx) in
 	wvL := make([]string, 0)
 	var tpv string
 	for k, v := range whereValues {
-		if _, ok := v.([]string); ok {
+		if reflect.TypeOf(v).Kind() == reflect.Slice {
 			tpv = "`" + k + "`" + " in" + "( :" + k + " )"
-		} else if _, ok = v.([]int); ok {
-			tpv = "`" + k + "`" + " in" + " (:" + k + ")"
+
 		} else {
 			tpv = "`" + k + "`" + "=" + " :" + k
 		}
